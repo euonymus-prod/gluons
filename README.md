@@ -18,7 +18,6 @@ http://ja.gluons.link (日本語)
 
     $ cd /{source_dir_path}
     $ git checkout master
-    $ rm -fr vendor/j7mbo
     $ composer install
 
 ※vendor/j7mbo/twitter-api-php が上手くgit管理できないため
