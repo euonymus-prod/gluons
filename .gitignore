@@ -1,0 +1,15 @@
+# CakePHP 3
+/vendor/*
+/config/app.php
+/tmp/*
+!/tmp/cache/models/empty
+!/tmp/cache/persistent/empty
+!/tmp/cache/views/empty
+!/tmp/sessions/empty
+!/tmp/tests/empty
+
+/logs/*
+!/logs/empty
+
+.DS_Store
+.DS_Store?
