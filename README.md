@@ -24,8 +24,8 @@ http://ja.gluons.link (日本語)
 
 # Prepare Databae
 
-    Build MySQL database named 'belongsto'
-    Build MySQL user named 'belongsto' (password is in config/app.php)
+    Build MySQL database named '{dbname}'
+    Build MySQL user named '{username}' (password is in config/app.php)
 
 # Prepare Tables
 
@@ -34,7 +34,7 @@ http://ja.gluons.link (日本語)
 
 # Prepare Table Datas
 
-    $ mysql -ubelongsto -p{password} belongsto < /{source_dir_path}
+    $ mysql -u{username} -p{password} {dbname} < /{source_dir_path}
 
 
 # Run local server
