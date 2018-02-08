@@ -56,7 +56,8 @@ class GoogleSearch
   {
     if (empty($query)) return false;
 
-    $template = 'https://www.google.co.jp/search?hl=ja&tbm=isch&biw=1912&bih=1045&q=%s';
+    //$template = 'https://www.google.co.jp/search?hl=ja&tbm=isch&biw=1912&bih=1045&q=%s';
+    $template = 'https://www.google.co.jp/search?tbm=isch&biw=1912&bih=1045&q=%s';
     $path = sprintf($template, urlencode($query));
     $element = '//div[contains(@class,"rg_meta notranslate")]';
 
