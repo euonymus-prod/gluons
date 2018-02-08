@@ -470,7 +470,9 @@ class Wikipedia
 	  $actors = array_merge($actors, $res);
 	}
       }
-    } else continue;
+    // TODO: 未テスト。エラーが出たので修正。なんで今まで continueで通っていたのか不明。
+    //} else continue;
+    } else return false;
 
 
     return ['relatives' => $relatives,
