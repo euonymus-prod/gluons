@@ -81,7 +81,7 @@ class Initial extends AbstractMigration
                 'null' => false,
             ])
             ->addColumn('sort', 'integer', [
-                'default' => '0',
+                'default' => null,
                 'limit' => 11,
                 'null' => false,
                 'signed' => false,
@@ -306,6 +306,13 @@ class Initial extends AbstractMigration
                 'default' => null,
                 'limit' => 255,
                 'null' => true,
+            ])
+            ->addColumn('gender', 'integer', [
+                'comment' => 'only when it is person',
+                'default' => null,
+                'limit' => 3,
+                'null' => true,
+                'signed' => false,
             ])
             ->addColumn('is_person', 'boolean', [
                 'default' => false,
@@ -693,7 +700,7 @@ class Initial extends AbstractMigration
                 'signed' => false,
             ])
             ->addColumn('sort', 'integer', [
-                'default' => '0',
+                'default' => null,
                 'limit' => 11,
                 'null' => false,
                 'signed' => false,
@@ -918,6 +925,13 @@ class Initial extends AbstractMigration
                 'default' => null,
                 'limit' => 255,
                 'null' => true,
+            ])
+            ->addColumn('gender', 'integer', [
+                'comment' => 'only when it is person',
+                'default' => null,
+                'limit' => 3,
+                'null' => true,
+                'signed' => false,
             ])
             ->addColumn('is_person', 'boolean', [
                 'default' => false,
