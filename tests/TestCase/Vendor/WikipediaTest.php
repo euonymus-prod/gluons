@@ -240,6 +240,7 @@ class WikipediaTest extends TestCase
 	$this->assertSame($res['wid'], 470070);
 	$this->assertSame($res['image_path'], 'https://upload.wikimedia.org/wikipedia/commons/a/a5/L_Sanger.jpg');
 	$this->assertSame($res['start'], '1968-07-16 00:00:00');
+	$this->assertSame($res['quark_type_id'], QuarkTypesTable::TYPE_PERSON);
       }
     }
 
