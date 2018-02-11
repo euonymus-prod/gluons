@@ -43,6 +43,10 @@ class UTest extends TestCase
 
     public function testSalvageDateFromText()
     {
+      $testText = '享保5年2月30日（1720年4月7日）';
+      $res = U::salvageDateFromText($testText);
+      $this->assertSame($res, '1720年4月7日');
+
       $testText = 'あああ2017年1月1日だお';
       $res = U::salvageDateFromText($testText);
       $this->assertSame($res, '2017年1月1日');
@@ -89,23 +93,23 @@ class UTest extends TestCase
 
       $testText = 'あああ 昭和44年（1969年）5月8日だお';
       $res = U::salvageDateFromText($testText);
-      $this->assertSame($res, '（1969年）5月8日');
+      $this->assertSame($res, '1969年5月8日');
 
       $testText = 'あああ 昭和44年（1969年）5月だお';
       $res = U::salvageDateFromText($testText);
-      $this->assertSame($res, '（1969年）5月');
+      $this->assertSame($res, '1969年5月');
 
       $testText = 'あああ 昭和44年（1969年）だお';
       $res = U::salvageDateFromText($testText);
-      $this->assertSame($res, '（1969年）');
+      $this->assertSame($res, '1969年');
 
       $testText = 'あああ 昭和44年（1969年） 05 月 08 日だお';
       $res = U::salvageDateFromText($testText);
-      $this->assertSame($res, '（1969年） 05 月 08 日');
+      $this->assertSame($res, '1969年 05 月 08 日');
 
       $testText = 'あああ 昭和44年（1969年） 05 月だお';
       $res = U::salvageDateFromText($testText);
-      $this->assertSame($res, '（1969年） 05 月');
+      $this->assertSame($res, '1969年 05 月');
     }
 
     public function testSalvagePeriodFromText()

@@ -493,7 +493,10 @@ class U
     $pattern = '/' . self::$pattern_date . '/';
     $res = preg_match($pattern, $txt, $matches);
     if (!$res) return false;
-    return $matches[0];
+    //return $matches[0];
+    $res = preg_replace('/（/', '', $matches[0]);
+    $res = preg_replace('/）/', '', $res);
+    return $res;
   }
 
   public static function salvagePeriodFromText($txt)
