@@ -39,6 +39,7 @@ class Wikipedia
   public static $xpath_infobox = '//table[contains(@class,"infobox")]';
   public static $xpath_infobox_country = '//table[contains(@class,"infoboxCountry")]';
   public static $xpath_redirect = '//*[contains(@class, "redirectMsg")]';
+  public static $xpath_disambig = '//*[contains(@id, "disambigbox")]';
 
   public static $retrieveCacheConfig = 'default';
 
@@ -922,7 +923,9 @@ class Wikipedia
   {
     self::$is_markdown = false;
     $dataset = self::callByTitle($query);
-    if (!$dataset || self::isRedirect($dataset['content'])) return false;
+    if (!$dataset ||
+	self::isRedirect($dataset['content']) ||
+	self::isDisambig($dataset['content'])) return false;
 
     self::$internal = true;
     self::$contentType = self::CONTENT_TYPE_NONE;
@@ -933,6 +936,12 @@ class Wikipedia
   {
     if (!($content instanceof \SimpleXMLElement)) return false;
     $element = @$content->xpath(self::$xpath_redirect);
+    return ($element);
+  }
+  public static function isDisambig($content)
+  {
+    if (!($content instanceof \SimpleXMLElement)) return false;
+    $element = @$content->xpath(self::$xpath_disambig);
     return ($element);
   }
 }
