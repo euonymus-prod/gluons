@@ -38,6 +38,8 @@ class Wikipedia
   public static $xpath_main = '//div[contains(@class, "mw-parser-output")]';
   public static $xpath_infobox = '//table[contains(@class,"infobox")]';
   public static $xpath_infobox_country = '//table[contains(@class,"infoboxCountry")]';
+  public static $xpath_redirect = '//*[contains(@class, "redirectMsg")]';
+
   public static $retrieveCacheConfig = 'default';
 
   public static function readPage($query, $infobox = false)
@@ -84,7 +86,6 @@ class Wikipedia
     if (!$element || !is_array($element) || !property_exists($element[0], 'tr')) return false;
     return $element[0]->tr;
   }
-
   /*********************************************************************************/
   /* quark                                                                         */
   /*********************************************************************************/
@@ -921,10 +922,17 @@ class Wikipedia
   {
     self::$is_markdown = false;
     $dataset = self::callByTitle($query);
-    if (!$dataset) return false;
+    if (!$dataset || self::isRedirect($dataset['content'])) return false;
 
     self::$internal = true;
     self::$contentType = self::CONTENT_TYPE_NONE;
     return self::readPageByXmlForQuark($dataset['title'], $dataset['content'], $dataset['pageid']);
+  }
+
+  public static function isRedirect($content)
+  {
+    if (!($content instanceof \SimpleXMLElement)) return false;
+    $element = @$content->xpath(self::$xpath_redirect);
+    return ($element);
   }
 }

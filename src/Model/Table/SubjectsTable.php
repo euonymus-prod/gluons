@@ -13,6 +13,7 @@ use Cake\Cache\Cache;
 use App\Model\Entity\Subject;
 use App\Model\Table\SubjectSearchesTable;
 use App\Model\Table\CategorylinksTable;
+use App\Model\Table\QuarkTypesTable;
 
 use Cake\Network\Exception\NotFoundException;
 
@@ -160,7 +161,7 @@ class SubjectsTable extends AppTable
       if (empty($data->name)) return $data;
       if (!$data->auto_fill) {
 	$QuarkTypes = TableRegistry::get('QuarkTypes');
-	if (empty($data->quark_type_id)) $data->quark_type_id = 1;
+	if (empty($data->quark_type_id)) $data->quark_type_id = QuarkTypesTable::TYPE_THING;
 	$quark_type = $QuarkTypes->get($data->quark_type_id);
 	$data->image_path = $quark_type->image_path;
 	return $data;
