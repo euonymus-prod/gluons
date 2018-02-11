@@ -160,16 +160,17 @@ class Wikipedia
 
     // get quark_type
     $quark_type_id = ($res = self::retrieveQtype($xml, $name)) ? $res : '';
-    if ($quark_type_id) {
-      $QuarkTypes = TableRegistry::get('QuarkTypes');
-      $image_path = $QuarkTypes->getImagePath($quark_type_id);
-    }
 
     // get description
     $description = ($res = self::retrieveDescription($xml)) ? $res : '';
 
     // get image_path
     //$image_path = ($res = self::retrieveImagePath($xml)) ? $res : NULL;
+    $image_path = NULL;
+    if ($quark_type_id) {
+      $QuarkTypes = TableRegistry::get('QuarkTypes');
+      $image_path = $QuarkTypes->getImagePath($quark_type_id);
+    }
     $res = self::retrieveImagePath($xml);
     if ($res && (strlen($res) <= 255)) $image_path = $res;
     
