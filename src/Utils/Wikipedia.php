@@ -14,6 +14,10 @@ namespace App\Utils;
 use Cake\Cache\Cache;
 use Cake\Cache\Engine\FileEngine;
 use Cake\Log\Log;
+use Cake\ORM\TableRegistry;
+
+use App\Model\Table\QuarkTypesTable;
+
 class Wikipedia
 {
   public function __construct(array $token = array(), array $consumer = array())
@@ -33,6 +37,7 @@ class Wikipedia
 
   public static $xpath_main = '//div[contains(@class, "mw-parser-output")]';
   public static $xpath_infobox = '//table[contains(@class,"infobox")]';
+  public static $xpath_infobox_country = '//table[contains(@class,"infoboxCountry")]';
   public static $retrieveCacheConfig = 'default';
 
   public static function readPage($query, $infobox = false)
@@ -68,6 +73,14 @@ class Wikipedia
   {
     if (!is_object($xml)) return false;
     $element = @$xml->xpath(self::$xpath_infobox);
+    if (!$element || !is_array($element) || !property_exists($element[0], 'tr')) return false;
+    return $element[0]->tr;
+  }
+
+  public static function parseInfoBoxCountry($xml)
+  {
+    if (!is_object($xml)) return false;
+    $element = @$xml->xpath(self::$xpath_infobox_country);
     if (!$element || !is_array($element) || !property_exists($element[0], 'tr')) return false;
     return $element[0]->tr;
   }
@@ -111,7 +124,7 @@ class Wikipedia
   {
     $xml = self::readPage($query);
     if (!$xml) return false;
-    return self::readPageByXmlForQuark($query, $xml, $wid);
+    return self::readPageByXmlForQuark($query, $xml);
   }
   public static function readPageByXmlForQuark($query, $xml, $wid = null)
   {
@@ -145,14 +158,21 @@ class Wikipedia
       $name = (string)$element[0];
     }
 
+    // get quark_type
+    $quark_type_id = ($res = self::retrieveQtype($xml, $name)) ? $res : '';
+    if ($quark_type_id) {
+      $QuarkTypes = TableRegistry::get('QuarkTypes');
+      $image_path = $QuarkTypes->getImagePath($quark_type_id);
+    }
+
     // get description
     $description = ($res = self::retrieveDescription($xml)) ? $res : '';
 
     // get image_path
     //$image_path = ($res = self::retrieveImagePath($xml)) ? $res : NULL;
     $res = self::retrieveImagePath($xml);
-    $image_path = ($res && (strlen($res) <= 255)) ? $res : NULL;
-
+    if ($res && (strlen($res) <= 255)) $image_path = $res;
+    
     // get start array
     $start = self::retrieveStart($xml);
     $dateArr = U::normalizeDateArrayFormat($start);
@@ -198,12 +218,106 @@ class Wikipedia
 	    'url'                   => $url,
 	    'is_person'             => $is_person,
 	    'wikipedia_sourced'     => 1,
+	    'quark_type_id'         => $quark_type_id,
 	    ];
     if ($name) $ret['name'] = $name;
     return $ret;
   }
 
+  public static function retrieveQtype($xml, $name = false)
+  {
+    // check the name first
+    if (preg_match('/大学$/', $name)) return QuarkTypesTable::TYPE_UNIVERSITY;
+    if (preg_match('/(小学校|初等部)$/', $name)) return QuarkTypesTable::TYPE_ELEM_SCHOOL;
+    if (preg_match('/中(学校|等部)$/', $name)) return QuarkTypesTable::TYPE_MID_SCHOOL;
+    if (preg_match('/高((等学)?校|等部)$/', $name)) return QuarkTypesTable::TYPE_HIGH_SCHOOL;
+    if (preg_match('/(幼稚|保育)園$/', $name)) return QuarkTypesTable::TYPE_PRE_SCHOOL;
+    if (preg_match('/(塾|予備校)$/', $name)) return QuarkTypesTable::TYPE_SCHOOL;
+    if (preg_match('/病院$/', $name)) return QuarkTypesTable::TYPE_HOSPITAL;
+    if (preg_match('/[区町村]$/', $name)) return QuarkTypesTable::TYPE_ADMN_AREA;
+    if (preg_match('/市$/', $name)) return QuarkTypesTable::TYPE_CITY;
+    
+    $txt = self::parseInfoBox($xml);
+    if (!$txt) return false;
 
+    if (preg_match('/(小学校|初等部)$/', (string)$txt[0]->th)) return QuarkTypesTable::TYPE_ELEM_SCHOOL;
+    if (preg_match('/中(学校|等部)$/', (string)$txt[0]->th)) return QuarkTypesTable::TYPE_MID_SCHOOL;
+    if (preg_match('/高((等学)?校|等部)$/', (string)$txt[0]->th)) return QuarkTypesTable::TYPE_HIGH_SCHOOL;
+    if (preg_match('/(幼稚|保育)園$/', (string)$txt[0]->th)) return QuarkTypesTable::TYPE_PRE_SCHOOL;
+    if (preg_match('/(塾|予備校)$/', (string)$txt[0]->th)) return QuarkTypesTable::TYPE_SCHOOL;
+
+    // check if it's a country
+    $txtCountry = self::parseInfoBoxCountry($xml);
+    if ($txtCountry) return QuarkTypesTable::TYPE_COUNTRY;
+
+    $label_count = 0;
+    $chart_rank_count = 0;
+    $member_count = 0;
+    foreach($txt as $val) {
+      $title = trim(strip_tags($val->th->asXML()));
+      //$title = trim((string)$val->th);
+      //if (empty($title) && property_exists($val->th, 'a')) {
+      //  $title = (string)$val->th->a;
+      //}
+
+      // person
+      if (in_array($title, ['国籍','出生地','性別','身長','生誕','生年月日','死没','職業','前職','現職','出身校','所属政党',
+			    '配偶者','親族','子供'])) return QuarkTypesTable::TYPE_PERSON;
+      // movie
+      if (in_array($title, ['上映時間','脚本','監督','原作','主題歌','配給','出演者'])) return QuarkTypesTable::TYPE_MOVIE;
+
+      // corporation
+      if (in_array($title, ['本社所在地','事業内容','資本金','従業員数','会計監査人','決算期','主要株主','主要子会社','発行済株式総数',
+			    '売上高','営業利益','経常利益','純利益','純資産','総資産'])) return QuarkTypesTable::TYPE_CORPORATION;
+
+      // university
+      if (in_array($title, ['大学設置','大学設置/創立','キャンパス','学部','研究科','学部生数','大学院生数']))
+	return QuarkTypesTable::TYPE_UNIVERSITY;
+
+      // publication issue
+      if (in_array($title, ['刊行頻度','刊行期間','編集長'])) return QuarkTypesTable::TYPE_PUBLICATIONISSUE;
+
+      // book
+      if (in_array($title, ['著者','発行日','発行元','出版社'])) return QuarkTypesTable::TYPE_BOOK;
+
+      // software application
+      if (in_array($title, ['プログラミング言語','対応OS','OSの系統','ソースモデル','最新安定版リリース','使用できる言語','パッケージ管理',
+			    '対応プラットフォーム','カーネル種別'])) return QuarkTypesTable::TYPE_SOFTWARE;
+
+      // game
+      //if (in_array($title, [''])) return QuarkTypesTable::TYPE_GAME;
+
+      // goverment organization
+      if (in_array($title, ['大臣','副大臣','大臣政務官','事務次官','内部部局','地方支分部局']))
+	return QuarkTypesTable::TYPE_GOVERNMENT;
+      
+      // hospital
+      if (in_array($title, ['標榜診療科','許可病床数','二次医療圏'])) return QuarkTypesTable::TYPE_HOSPITAL;
+
+      // 音楽関係
+      if (strcmp($title,'レーベル') === 0) $label_count++;
+      if (strcmp($title,'チャート最高順位') === 0) $chart_rank_count++;
+
+      // music recording
+      if (in_array($title, ['作詞・作曲','録音'])) return QuarkTypesTable::TYPE_MUSIC_REC;
+
+      // music album
+      if (preg_match('/スタジオ・アルバム/', $title)) return QuarkTypesTable::TYPE_MUSIC_ALBUM;
+
+      // music group
+      if (strcmp($title,'メンバー') === 0) $member_count++;
+      if (($member_count >= 1) && ($label_count >= 1)) return QuarkTypesTable::TYPE_MUSIC_GROUP;
+
+    }
+    if (!$txt || !is_string($txt)) return false;
+
+    /* $txt = preg_replace('/\[\d+\]/', '', $txt); */
+    /* $txt = preg_replace('/\A.*（.*）.*は、/', '', $txt); */
+    /* $txt = preg_replace('/である。?$/', '', $txt); */
+    /* $txt = preg_replace('/\A転送先:/', '', $txt); */
+    
+    /* return U::abbreviateStr($txt, 254); */
+  }
   public static function retrieveDescription($xml)
   {
     $txt = self::retrieveFirstP($xml);

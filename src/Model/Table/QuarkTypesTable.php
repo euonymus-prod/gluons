@@ -26,7 +26,13 @@ class QuarkTypesTable extends Table
 {
     const TYPE_THING       = 1;
     const TYPE_PERSON      = 2;
+    const TYPE_BOOK        = 5;
+    const TYPE_PUBLICATIONISSUE = 6;
+    const TYPE_SOFTWARE    = 8;
+    const TYPE_GAME        = 9;
     const TYPE_MOVIE       = 10;
+    const TYPE_MUSIC_ALBUM = 14;
+    const TYPE_MUSIC_REC   = 15;
     const TYPE_CORPORATION = 23;
     const TYPE_UNIVERSITY  = 25;
     const TYPE_ELEM_SCHOOL = 26;
@@ -34,6 +40,12 @@ class QuarkTypesTable extends Table
     const TYPE_MID_SCHOOL  = 28;
     const TYPE_PRE_SCHOOL  = 29;
     const TYPE_SCHOOL      = 30;
+    const TYPE_GOVERNMENT  = 31;
+    const TYPE_HOSPITAL    = 35;
+    const TYPE_MUSIC_GROUP = 38;
+    const TYPE_ADMN_AREA   = 43;
+    const TYPE_CITY        = 44;
+    const TYPE_COUNTRY     = 45;
 
     /**
      * Initialize method
@@ -97,6 +109,14 @@ class QuarkTypesTable extends Table
 
         return $validator;
     }
+    /*******************************************************/
+    /* select                                              */
+    /*******************************************************/
+    public function getImagePath($id)
+    {
+      return $this->findById($id)->select('image_path')->first()->image_path;
+    }
+
     /*******************************************************/
     /* where                                               */
     /*******************************************************/

@@ -79,4 +79,9 @@ class QuarkTypesTableTest extends TestCase
       //$this->markTestIncomplete('Not implemented yet.');
     }
 
+    public function testGetImagePath()
+    {
+      $res = $this->QuarkTypes->getImagePath(QuarkTypesTable::TYPE_PERSON);
+      $this->assertSame($res,'/img/person.png');
+    }
 }

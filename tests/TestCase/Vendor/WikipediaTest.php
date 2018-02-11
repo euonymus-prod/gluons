@@ -7,6 +7,7 @@ use App\Utils\Wikipedia;
 use Cake\TestSuite\TestCase;
 use Cake\Cache\Cache;
 
+use App\Model\Table\QuarkTypesTable;
 use App\Utils\U;
 /**
  * App\Vendor\Wikipedia Test Case
@@ -19,7 +20,10 @@ class WikipediaTest extends TestCase
      * @var array
      */
     public $fixtures = [
+        'app.quark_types',
     ];
+
+    public static $dummy_wikipedia_content;
 
     // MEMO: Twitter API callを頻繁にテストで使用したくないのでFalseにしておく。
     //static $apitest = true;
@@ -35,6 +39,8 @@ class WikipediaTest extends TestCase
         parent::setUp();
 	$this->Wikipedia = new Wikipedia;
 	Wikipedia::$internal = true; // in order not to access google search
+	require("dummy_wikipedia_content.php"); // setUpは何度も呼ばれるので、require_onceにすると内容が空に上書きされ失敗する。
+	self::$dummy_wikipedia_content = $dummy_wikipedia_content;
     }
 
     /**
@@ -235,6 +241,222 @@ class WikipediaTest extends TestCase
 	$this->assertSame($res['image_path'], 'https://upload.wikimedia.org/wikipedia/commons/a/a5/L_Sanger.jpg');
 	$this->assertSame($res['start'], '1968-07-16 00:00:00');
       }
+    }
+
+    public function testRetrieveQtype()
+    {
+      $content = simplexml_load_string(self::$dummy_wikipedia_content);
+      $res = Wikipedia::retrieveQtype($content);
+      $this->assertSame($res, QuarkTypesTable::TYPE_PERSON);
+
+      // name check
+      $title = '世田谷区立赤堤小学校';
+      $res = Wikipedia::retrieveQtype(false, $title);
+      $this->assertSame($res, QuarkTypesTable::TYPE_ELEM_SCHOOL);
+
+      $title = '慶應義塾横浜初等部';
+      $res = Wikipedia::retrieveQtype(false, $title);
+      $this->assertSame($res, QuarkTypesTable::TYPE_ELEM_SCHOOL);
+
+      $title = '目黒区立第一中学校';
+      $res = Wikipedia::retrieveQtype(false, $title);
+      $this->assertSame($res, QuarkTypesTable::TYPE_MID_SCHOOL);
+
+      $title = '慶應義塾中等部';
+      $res = Wikipedia::retrieveQtype(false, $title);
+      $this->assertSame($res, QuarkTypesTable::TYPE_MID_SCHOOL);
+
+      $title = '北海道函館西高等学校';
+      $res = Wikipedia::retrieveQtype(false, $title);
+      $this->assertSame($res, QuarkTypesTable::TYPE_HIGH_SCHOOL);
+
+      $title = '慶應義塾湘南藤沢中等部・高等部';
+      $res = Wikipedia::retrieveQtype(false, $title);
+      $this->assertSame($res, QuarkTypesTable::TYPE_HIGH_SCHOOL);
+
+      $title = '北海道函館西高校';
+      $res = Wikipedia::retrieveQtype(false, $title);
+      $this->assertSame($res, QuarkTypesTable::TYPE_HIGH_SCHOOL);
+
+      $title = '白百合学園幼稚園';
+      $res = Wikipedia::retrieveQtype(false, $title);
+      $this->assertSame($res, QuarkTypesTable::TYPE_PRE_SCHOOL);
+
+      $title = '河合塾';
+      $res = Wikipedia::retrieveQtype(false, $title);
+      $this->assertSame($res, QuarkTypesTable::TYPE_SCHOOL);
+
+      $title = '佐鳴予備校';
+      $res = Wikipedia::retrieveQtype(false, $title);
+      $this->assertSame($res, QuarkTypesTable::TYPE_SCHOOL);
+
+      $title = '聖路加国際病院';
+      $res = Wikipedia::retrieveQtype(false, $title);
+      $this->assertSame($res, QuarkTypesTable::TYPE_HOSPITAL);
+
+      $title = '千代田区';
+      $res = Wikipedia::retrieveQtype(false, $title);
+      $this->assertSame($res, QuarkTypesTable::TYPE_ADMN_AREA);
+
+      $title = '中津市';
+      $res = Wikipedia::retrieveQtype(false, $title);
+      $this->assertSame($res, QuarkTypesTable::TYPE_CITY);
+
+      // ここからは APIコールあり
+      if (self::$apitest) {
+	$title = '水樹奈々';
+	Wikipedia::$is_markdown = false;
+	$wikipedia = Wikipedia::callByTitle($title);
+	$res = Wikipedia::retrieveQtype($wikipedia['content']);
+	$this->assertSame($res, QuarkTypesTable::TYPE_PERSON);
+
+	$title = 'マトリックス_(映画)';
+	Wikipedia::$is_markdown = false;
+	$wikipedia = Wikipedia::callByTitle($title);
+	$res = Wikipedia::retrieveQtype($wikipedia['content']);
+	$this->assertSame($res, QuarkTypesTable::TYPE_MOVIE);
+
+	$title = '三井物産';
+	Wikipedia::$is_markdown = false;
+	$wikipedia = Wikipedia::callByTitle($title);
+	$res = Wikipedia::retrieveQtype($wikipedia['content']);
+	$this->assertSame($res, QuarkTypesTable::TYPE_CORPORATION);
+
+	$title = 'ハーバード大学';
+	Wikipedia::$is_markdown = false;
+	$wikipedia = Wikipedia::callByTitle($title);
+	$res = Wikipedia::retrieveQtype($wikipedia['content']);
+	$this->assertSame($res, QuarkTypesTable::TYPE_UNIVERSITY);
+
+	// type 2 without name
+	$title = '世田谷区立赤堤小学校';
+	Wikipedia::$is_markdown = false;
+	$wikipedia = Wikipedia::callByTitle($title);
+	$res = Wikipedia::retrieveQtype($wikipedia['content']);
+	$this->assertSame($res, QuarkTypesTable::TYPE_ELEM_SCHOOL);
+
+	// type 4
+	$title = '慶應義塾横浜初等部';
+	Wikipedia::$is_markdown = false;
+	$wikipedia = Wikipedia::callByTitle($title);
+	$res = Wikipedia::retrieveQtype($wikipedia['content']);
+	$this->assertSame($res, QuarkTypesTable::TYPE_ELEM_SCHOOL);
+  
+	// type 2 without name
+	$title = '目黒区立第一中学校';
+	Wikipedia::$is_markdown = false;
+	$wikipedia = Wikipedia::callByTitle($title);
+	$res = Wikipedia::retrieveQtype($wikipedia['content']);
+	$this->assertSame($res, QuarkTypesTable::TYPE_MID_SCHOOL);
+
+	// type 4
+	$title = '慶應義塾中等部';
+	Wikipedia::$is_markdown = false;
+	$wikipedia = Wikipedia::callByTitle($title);
+	$res = Wikipedia::retrieveQtype($wikipedia['content']);
+	$this->assertSame($res, QuarkTypesTable::TYPE_MID_SCHOOL);
+
+	// type 2 without name
+	$title = '北海道函館西高等学校';
+	Wikipedia::$is_markdown = false;
+	$wikipedia = Wikipedia::callByTitle($title);
+	$res = Wikipedia::retrieveQtype($wikipedia['content']);
+	$this->assertSame($res, QuarkTypesTable::TYPE_HIGH_SCHOOL);
+
+	// type 4
+	$title = '慶應義塾湘南藤沢中等部・高等部';
+	Wikipedia::$is_markdown = false;
+	$wikipedia = Wikipedia::callByTitle($title);
+	$res = Wikipedia::retrieveQtype($wikipedia['content']);
+	$this->assertSame($res, QuarkTypesTable::TYPE_HIGH_SCHOOL);
+
+	// type 2 without name
+	$title = '白百合学園幼稚園';
+	Wikipedia::$is_markdown = false;
+	$wikipedia = Wikipedia::callByTitle($title);
+	$res = Wikipedia::retrieveQtype($wikipedia['content']);
+	$this->assertSame($res, QuarkTypesTable::TYPE_PRE_SCHOOL);
+
+	$title = '菊と刀';
+	Wikipedia::$is_markdown = false;
+	$wikipedia = Wikipedia::callByTitle($title);
+	$res = Wikipedia::retrieveQtype($wikipedia['content']);
+	$this->assertSame($res, QuarkTypesTable::TYPE_BOOK);
+
+	$title = 'ドグラ・マグラ';
+	Wikipedia::$is_markdown = false;
+	$wikipedia = Wikipedia::callByTitle($title);
+	$res = Wikipedia::retrieveQtype($wikipedia['content']);
+	$this->assertSame($res, QuarkTypesTable::TYPE_BOOK);
+
+	$title = '週刊文春';
+	Wikipedia::$is_markdown = false;
+	$wikipedia = Wikipedia::callByTitle($title);
+	$res = Wikipedia::retrieveQtype($wikipedia['content']);
+	$this->assertSame($res, QuarkTypesTable::TYPE_PUBLICATIONISSUE);
+
+        $title = 'Emacs';
+	Wikipedia::$is_markdown = false;
+	$wikipedia = Wikipedia::callByTitle($title);
+	$res = Wikipedia::retrieveQtype($wikipedia['content']);
+	$this->assertSame($res, QuarkTypesTable::TYPE_SOFTWARE);
+
+        $title = 'Linux';
+	Wikipedia::$is_markdown = false;
+	$wikipedia = Wikipedia::callByTitle($title);
+	$res = Wikipedia::retrieveQtype($wikipedia['content']);
+	$this->assertSame($res, QuarkTypesTable::TYPE_SOFTWARE);
+
+        $title = 'イメージズ・アンド・ワーズ';
+	Wikipedia::$is_markdown = false;
+	$wikipedia = Wikipedia::callByTitle($title);
+	$res = Wikipedia::retrieveQtype($wikipedia['content']);
+	$this->assertSame($res, QuarkTypesTable::TYPE_MUSIC_ALBUM);
+
+        $title = '上を向いて歩こう';
+	Wikipedia::$is_markdown = false;
+	$wikipedia = Wikipedia::callByTitle($title);
+	$res = Wikipedia::retrieveQtype($wikipedia['content']);
+	$this->assertSame($res, QuarkTypesTable::TYPE_MUSIC_REC);
+
+        $title = 'Body_Feels_EXIT';
+	Wikipedia::$is_markdown = false;
+	$wikipedia = Wikipedia::callByTitle($title);
+	$res = Wikipedia::retrieveQtype($wikipedia['content']);
+	$this->assertSame($res, QuarkTypesTable::TYPE_MUSIC_REC);
+
+        $title = '経済産業省';
+	Wikipedia::$is_markdown = false;
+	$wikipedia = Wikipedia::callByTitle($title);
+	$res = Wikipedia::retrieveQtype($wikipedia['content']);
+	$this->assertSame($res, QuarkTypesTable::TYPE_GOVERNMENT);
+
+        // type 2 without name
+        $title = '聖路加国際病院';
+	Wikipedia::$is_markdown = false;
+	$wikipedia = Wikipedia::callByTitle($title);
+	$res = Wikipedia::retrieveQtype($wikipedia['content']);
+	$this->assertSame($res, QuarkTypesTable::TYPE_HOSPITAL);
+
+        $title = 'ドリーム・シアター';
+	Wikipedia::$is_markdown = false;
+	$wikipedia = Wikipedia::callByTitle($title);
+	$res = Wikipedia::retrieveQtype($wikipedia['content']);
+	$this->assertSame($res, QuarkTypesTable::TYPE_MUSIC_GROUP);
+
+	$title = 'アメリカ合衆国';
+	Wikipedia::$is_markdown = false;
+	$wikipedia = Wikipedia::callByTitle($title);
+	$res = Wikipedia::retrieveQtype($wikipedia['content']);
+	$this->assertSame($res, QuarkTypesTable::TYPE_COUNTRY);
+      }
+    }
+
+    public function testConstructData()
+    {
+      $content = simplexml_load_string(self::$dummy_wikipedia_content);
+      $res = Wikipedia::constructData($content);
+      //debug($res);
     }
 
     public function testRetrieveDescription()
