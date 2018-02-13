@@ -112,6 +112,17 @@ class UTest extends TestCase
       $this->assertSame($res, '1969年 05 月');
     }
 
+    public function testNormalizeDateFormat()
+    {
+      $roughDateTxt = '1822年02月29日';
+      $res = U::normalizeDateFormat($roughDateTxt);
+      $this->assertFalse($res);
+
+      $roughDateTxt = '1822年02月28日';
+      $res = U::normalizeDateFormat($roughDateTxt);
+      $this->assertSame('1822-02-28', $res);
+    }
+
     public function testSalvagePeriodFromText()
     {
       $testText = 'あああ2017年1月1日 - 2017年07 月15日だお';

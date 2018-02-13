@@ -430,6 +430,8 @@ class Wikipedia
 
       $txt = self::getPlainText($val->td);
       if (!$txt) return false;
+      $txt = U::salvageDateFromText($txt);
+      if (!$txt) return false;
       return U::normalizeDateFormat($txt);
     }
     return false;

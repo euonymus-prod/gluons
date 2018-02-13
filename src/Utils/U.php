@@ -527,7 +527,8 @@ class U
     $pattern = '/(\d{3,4} ?)年/';
     $res = preg_match($pattern, $roughDateTxt, $matches);
     if (!$res) return false;
-    $ret = $matches[1];
+    $year = $matches[1];
+    $ret = $year;
 
     $pattern = '/(\d{1,2}) ?月/';
     $res = preg_match($pattern, $roughDateTxt, $matches);
@@ -540,6 +541,7 @@ class U
       if ($res) {
 	$day = $matches[1];
 	$ret = sprintf($ret . '-%02d', $day);
+	if (!checkdate($month, $day, $year)) return false;
       }
     }
     return $ret;
