@@ -109,6 +109,7 @@ class SubjectsTable extends AppTable
 	    // somehow foreignKey, bindingKey both are needed to be quark_type_id
             'foreignKey' => 'quark_type_id',
             'bindingKey' => 'quark_type_id',
+	    'dependent' => false, // Important!!
         ]);
 
 	$this->belongsToManyPassives();
