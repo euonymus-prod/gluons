@@ -45,7 +45,7 @@ class PagesController extends AppController
 		     ];
 
       $ja_pickup_ids = [
-		     '8fc93feb-2f36-43cd-be8e-438a2ddfaafa' => 'passive', // 柳瀬唯夫
+		     '8fc93feb-2f36-43cd-be8e-438a2ddfaafa' => 'active', // 柳瀬唯夫
 		     '021e29e3-b3c9-4fee-bbe4-26a6e44efb40' => 'passive', // Hana倶楽部投資金未返還問題
 		     'df03fae8-16b0-4ba8-8309-d5ca64c1eb28' => 'active',  // NEM不正送金事件
 		     'f517ec88-e6a7-4592-b2dd-22b6d2cc17bd' => 'active',  // 火星（ファソン15）
