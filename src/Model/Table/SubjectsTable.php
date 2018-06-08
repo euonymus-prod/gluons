@@ -427,8 +427,9 @@ class SubjectsTable extends AppTable
 	  if (self::$cachedRead) {
 	    $query2 = $query2->cache('actives_' . $this->lang . '_' . $second_type . '_' . $subject->actives[$i]->id);
 	  }
+	  // MEMO: 暫定対策で limit 10
 	  $subject->actives[$i]->relation
-	    = $query2->where($where2)->order(['Relations.start' =>'DESC']);
+	    = $query2->where($where2)->order(['Relations.start' =>'DESC'])->limit(10);
 	}
 	for($i = 0; count($subject->passives) > $i; $i++) {
 	  $where2 = [$relationKey => $subject->passives[$i]->id];
@@ -445,8 +446,9 @@ class SubjectsTable extends AppTable
 	  if (self::$cachedRead) {
 	    $query3 = $query3->cache('passives_' . $this->lang . '_' . $second_type . '_' . $subject->passives[$i]->id);
 	  }
+	  // MEMO: 暫定対策で limit 10
 	  $subject->passives[$i]->relation
-	    = $query3->where($where2)->order(['Relations.start' =>'DESC']);
+	    = $query3->where($where2)->order(['Relations.start' =>'DESC'])->limit(10);
 	}
       }
       return $subject;

@@ -87,10 +87,12 @@ class SubjectsController extends AppController
         }
 
 	$contain['Actives'] = function ($q) {
-	  return $q->where(['Relations.baryon_id is NULL']);
+	  // MEMO: 暫定対策で limit 1000
+	  return $q->where(['Relations.baryon_id is NULL'])->limit(1000);
 	};
 	$contain['Passives'] = function ($q) {
-	  return $q->where(['Relations.baryon_id is NULL']);
+	  // MEMO: 暫定対策で limit 1000
+	  return $q->where(['Relations.baryon_id is NULL'])->limit(1000);
 	};
 	$contain[] = 'QuarkProperties';
 
