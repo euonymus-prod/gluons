@@ -39,14 +39,16 @@ class QuarkController extends AppController
       $this->loadComponent('RequestHandler');
       $this->RequestHandler->renderAs($this, 'json');
       $this->response->type('application/json');
+      $this->response->header("Access-Control-Allow-Origin: *");
     }
 
     public function view($name = null)
     {
       $Subjects = TableRegistry::get('Subjects');
       
-      $query = $Subjects->find()->where(['name' => $name]);
-      $this->set('articles', $this->paginate($query));
+      $query = $Subjects->find()->where($Subjects->wherePrivacyName($name));
+      /* $this->set('articles', $this->paginate($query)); */
+      $this->set('articles', $query->first());
    
       /* $this->paginate = [ */
       /* 			 'table' => '', */
