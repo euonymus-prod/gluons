@@ -56,7 +56,8 @@ Router::scope('/', function (RouteBuilder $routes) {
      */
     $routes->connect('/pages/*', ['controller' => 'Pages', 'action' => 'display']);
 
-    $routes->connect('/quark/*', ['controller' => 'quark', 'action' => 'view']);
+    $routes->connect('/quark/*', ['controller' => 'Quark', 'action' => 'view']);
+    $routes->connect('/quark_properties/*', ['controller' => 'QuarkProperties', 'action' => 'index']);
 
     /**
      * Connect catchall routes for all controllers.
