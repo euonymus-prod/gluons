@@ -171,6 +171,57 @@ class RelationsTable extends AppTable
     {
       return ['Relations.gluon_type_id is NULL'];
     }
+
+
+    public static function whereByQuarkProperty($quark_id, $quark_property_id)
+    {
+      $QpropertyGtypes = TableRegistry::get('QpropertyGtypes');
+      $query = $QpropertyGtypes->find()->where(['QpropertyGtypes.quark_property_id' => $quark_property_id]);
+
+      $active_gluon_types = [];
+      $passive_gluon_types = [];
+      $bothsides_gluon_types = [];
+      foreach($query as $key => $val) {
+	if ($val->sides == 0) {
+	  $bothsides_gluon_types[] = $val->gluon_type_id;
+	} elseif ($val->sides == 1) {
+	  $active_gluon_types[] = $val->gluon_type_id;
+	} elseif ($val->sides == 2) {
+	  $passive_gluon_types[] = $val->gluon_type_id;
+	}
+      }
+
+      $active = false;
+      $passive = false;
+      $bothsides = false;
+      if (!empty($active_gluon_types)) {
+	$active = ['Relations.active_id' => $quark_id,
+		   'Relations.gluon_type_id in' => $active_gluon_types];
+      }
+      if (!empty($passive_gluon_types)) {
+	$passive = ['Relations.passive_id' => $quark_id,
+		   'Relations.gluon_type_id in' => $passive_gluon_types];
+      }
+      if (!empty($bothsides_gluon_types)) {
+	$bothsides = [
+
+			      'or' => ['Relations.active_id' => $quark_id, 'Relations.passive_id' => $quark_id],
+			      'Relations.gluon_type_id in' => $bothsides_gluon_types
+		    ];
+      }
+      if ($active && $passive && $bothsides) {
+	$where = ['or' => [$active, $passive, $bothsides]];
+      } elseif ($active && $passive) {
+	$where = ['or' => [$active, $passive]];
+      } elseif ($bothsides) {
+	$where = $bothsides;
+      } elseif ($active) {
+	$where = $active;
+      } elseif ($passive) {
+	$where = $passive;
+      }
+      return $where;
+    }
     
     /*******************************************************/
     /* batch                                               */
