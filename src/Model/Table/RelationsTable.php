@@ -162,6 +162,15 @@ class RelationsTable extends AppTable
     /*******************************************************/
     /* where                                               */
     /*******************************************************/
+    public static function whereNoRecord()
+    {
+      return ['Relations.id' => false];
+    }
+    public static function whereAllRecord()
+    {
+      return [true];
+    }
+
     public static function whereActivePassivePair($active_id, $passive_id)
     {
       return ['Relations.active_id' => $active_id, 
@@ -173,10 +182,58 @@ class RelationsTable extends AppTable
     }
 
 
+    public static function whereByNoQuarkProperty($quark_id, $quark_property_id)
+    {
+      if (empty($quark_id)) {
+	return self::whereNoRecord();
+      }
+      
+      $Subjects = TableRegistry::get('Subjects');
+      $subject = $Subjects->findById($quark_id)->contain(['QuarkProperties'])->first();
+      if (empty($subject)) {
+	return self::whereNoRecord();
+      }
+
+      $quark_property_ids = [];
+      foreach($subject->quark_properties as $key => $val) {
+	$quark_property_ids[] = $val->id;
+      }
+      
+      $QpropertyGtypes = TableRegistry::get('QpropertyGtypes');
+      $q_property_g_type_query = $QpropertyGtypes->find()->where(['QpropertyGtypes.quark_property_id in' => $quark_property_ids]);
+      if ($q_property_g_type_query->count() == 0) {
+      	return self::whereNoRecord();
+      }
+
+      $gluon_type_ids = [];
+      foreach($q_property_g_type_query as $key => $val) {
+	$gluon_type_ids[] = $val->gluon_type_id;
+      }
+      $gluon_type_ids = array_unique($gluon_type_ids);
+
+      if ($quark_property_id == 'active') {
+	$ret = ['Relations.active_id' => $quark_id,
+		'NOT' => ['Relations.gluon_type_id not in' => $gluon_type_ids]];
+      } elseif ($quark_property_id == 'passive') {
+	$ret = ['Relations.passive_id' => $quark_id,
+		'NOT' => ['Relations.gluon_type_id not in' => $gluon_type_ids]];
+      } else {
+	return self::whereNoRecord();
+      }
+      return $ret;
+    }
+
     public static function whereByQuarkProperty($quark_id, $quark_property_id)
     {
+      if (empty($quark_id)) {
+	return self::whereNoRecord();
+      }
       $QpropertyGtypes = TableRegistry::get('QpropertyGtypes');
       $query = $QpropertyGtypes->find()->where(['QpropertyGtypes.quark_property_id' => $quark_property_id]);
+      if ($query->count() == 0) {
+      	return self::whereNoRecord();
+      }
+
 
       $active_gluon_types = [];
       $passive_gluon_types = [];
@@ -219,6 +276,8 @@ class RelationsTable extends AppTable
 	$where = $active;
       } elseif ($passive) {
 	$where = $passive;
+      } else {
+	return self::whereNoRecord();
       }
       return $where;
     }

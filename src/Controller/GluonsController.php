@@ -50,7 +50,12 @@ class GluonsController extends AppController
       ];
 
       $Relations = TableRegistry::get('Relations');
-      $where = $Relations->whereByQuarkProperty($quark_id, $quark_property_id);
+
+      if (in_array($quark_property_id, ['active', 'passive'])) {
+	$where = $Relations->whereByNoQuarkProperty($quark_id, $quark_property_id);
+      } else {
+	$where = $Relations->whereByQuarkProperty($quark_id, $quark_property_id);
+      }
       $query = $Relations->find()->where($where)->order(['Relations.start' => 'Desc']);
       $this->set('articles', $this->paginate($query));
       $this->set('_serialize', 'articles');
