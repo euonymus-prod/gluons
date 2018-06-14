@@ -44,9 +44,14 @@ class GluonsController extends AppController
 
     public function view($quark_id = null, $quark_property_id = 'active')
     {
+      $this->paginate = [
+	 'contain' => ['Actives', 'Passives'],
+	 'limit' => 100
+      ];
+
       $Relations = TableRegistry::get('Relations');
       $where = $Relations->whereByQuarkProperty($quark_id, $quark_property_id);
-      $query = $Relations->find()->where($where)->order(['start' => 'Desc']);
+      $query = $Relations->find()->where($where)->order(['Relations.start' => 'Desc']);
       $this->set('articles', $this->paginate($query));
       $this->set('_serialize', 'articles');
     }
