@@ -212,11 +212,21 @@ class RelationsTable extends AppTable
       $gluon_type_ids = array_unique($gluon_type_ids);
 
       if ($quark_property_id == 'active') {
-	$ret = ['Relations.active_id' => $quark_id,
-		'NOT' => ['Relations.gluon_type_id not in' => $gluon_type_ids]];
+	$ret = [
+		'Relations.active_id' => $quark_id,
+		'or' => [
+			 'Relations.gluon_type_id IS' => NULL,
+			 'Relations.gluon_type_id NOT IN' => $gluon_type_ids,
+			 ]
+		];
       } elseif ($quark_property_id == 'passive') {
-	$ret = ['Relations.passive_id' => $quark_id,
-		'NOT' => ['Relations.gluon_type_id not in' => $gluon_type_ids]];
+	$ret = [
+		'Relations.passive_id' => $quark_id,
+		'or' => [
+			 'Relations.gluon_type_id IS' => NULL,
+			 'Relations.gluon_type_id NOT IN' => $gluon_type_ids
+			 ]
+		];
       } else {
 	return self::whereNoRecord();
       }
