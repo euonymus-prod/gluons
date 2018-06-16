@@ -483,6 +483,30 @@ class SubjectsTable extends AppTable
       return $query;
     }
 
+    public function searchForApi($search_words, $limit = 20)
+    {
+      $expr = self::bigramize($search_words);
+
+      $whereSearch = "MATCH(SubjectSearches.search_words) AGAINST(:search)";
+      $where = [$this->wherePrivacy(), $whereSearch];
+      $query = $this->find('all');
+
+      if (self::$cachedRead) {
+	$query = $query->cache('Subjects_' . $this->lang . '_' . $search_words);
+      }
+      $query = $query
+	->contain(['SubjectSearches'])
+	->matching('SubjectSearches')
+        ->where($where)
+	->bind(":search", $expr);
+
+      if (is_numeric($limit)) {
+	$query = $query->limit($limit);
+      }
+
+      return $query;
+    }
+
     public static $escapeForTest = false;
     // findByNameだとスペース区切りの違いで取得できない場合があるのでわざわざsearch()から取得する
     public function getOneWithSearch($str)

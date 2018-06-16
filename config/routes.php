@@ -61,6 +61,7 @@ Router::scope('/', function (RouteBuilder $routes) {
     $routes->connect('/quark_properties/*', ['controller' => 'QuarkProperties', 'action' => 'index']);
     $routes->connect('/gluons/by_quark_property/*', ['controller' => 'Gluons', 'action' => 'by_quark_property']);
     $routes->connect('/gluons/*', ['controller' => 'Gluons', 'action' => 'view']);
+    $routes->connect('/search/*', ['controller' => 'Search', 'action' => 'index']);
 
     /**
      * Connect catchall routes for all controllers.
