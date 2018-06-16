@@ -56,6 +56,7 @@ Router::scope('/', function (RouteBuilder $routes) {
      */
     $routes->connect('/pages/*', ['controller' => 'Pages', 'action' => 'display']);
 
+    $routes->connect('/pickups/*', ['controller' => 'Pickups', 'action' => 'view']);
     $routes->connect('/quark/*', ['controller' => 'Quark', 'action' => 'view']);
     $routes->connect('/quark_properties/*', ['controller' => 'QuarkProperties', 'action' => 'index']);
     $routes->connect('/gluons/by_quark_property/*', ['controller' => 'Gluons', 'action' => 'by_quark_property']);

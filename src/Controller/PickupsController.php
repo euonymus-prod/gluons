@@ -1,33 +1,38 @@
 <?php
-/**
- * CakePHP(tm) : Rapid Development Framework (http://cakephp.org)
- * Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
- *
- * Licensed under The MIT License
- * For full copyright and license information, please see the LICENSE.txt
- * Redistributions of files must retain the above copyright notice.
- *
- * @copyright Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
- * @link      http://cakephp.org CakePHP(tm) Project
- * @since     0.2.9
- * @license   http://www.opensource.org/licenses/mit-license.php MIT License
- */
 namespace App\Controller;
 
-use Cake\Network\Exception\NotFoundException;
-use Cake\View\Exception\MissingTemplateException;
+use App\Controller\AppController;
+
 use Cake\ORM\TableRegistry;
+use Cake\Network\Exception\NotFoundException;
+
+use Cake\Cache\Cache;
+use Cake\Routing\Router;
+use App\Utils\U;
 
 /**
- * Static content controller
- *
- * This controller will render views from Template/Pages/
- *
- * @link http://book.cakephp.org/3.0/en/controllers/pages-controller.html
+ * Pickups Controller
  */
-class PagesController extends AppController
+class PickupsController extends AppController
 {
-    public function display()
+    public function isAuthorized($user)
+    {
+        if (in_array($this->request->action, ['add', 'edit', 'confirm'])) {
+            return true;
+        }
+        return parent::isAuthorized($user);
+    }
+
+    public function initialize()
+    {
+      parent::initialize();
+      $this->loadComponent('RequestHandler');
+      $this->RequestHandler->renderAs($this, 'json');
+      $this->response->type('application/json');
+      $this->response->header("Access-Control-Allow-Origin: *");
+    }
+
+    public function view($name = null)
     {
       $lang_now = AppController::$lang;
       $lang_eng = AppController::LANG_ENG;
@@ -86,7 +91,8 @@ class PagesController extends AppController
       $pickups = $Subjects->find('all', ['conditions' => ['Subjects.id in' => array_keys($pickup_ids)]])->limit(8);
       $pickups = self::pickupsOrder($pickups, $pickup_ids);
 
-      $this->set(compact('title', 'pickups'));
+      $this->set('pickups', $pickups);
+      $this->set('_serialize', 'pickups');
     }
 
     public static function pickupsOrder($pickups, $indicator)
