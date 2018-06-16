@@ -181,6 +181,23 @@ class RelationsTable extends AppTable
       return ['Relations.gluon_type_id is NULL'];
     }
 
+    public static function whereNoBaryon()
+    {
+      return ['Relations.baryon_id is NULL'];
+    }
+
+    public static function whereByGluonSides($quark_id, $gluon_sides)
+    {
+      if ($gluon_sides == 'active') {
+	$where = array_merge(['Relations.active_id' => $quark_id], self::whereNoBaryon());
+      } elseif ($gluon_sides == 'passive') {
+	$where = array_merge(['Relations.passive_id' => $quark_id], self::whereNoBaryon());
+      } else {
+	$where = self::whereNoRecord();
+      }
+      return $where;
+    }
+
     // $gluon_sides is 'active' or 'passive'
     public static function whereByNoQuarkProperty($quark_id, $gluon_sides)
     {
@@ -206,7 +223,7 @@ class RelationsTable extends AppTable
 	} else {
 	  return self::whereNoRecord();
 	}
-	return $ret;
+	return array_merge($ret, self::whereNoBaryon());
       }
       
       $QpropertyGtypes = TableRegistry::get('QpropertyGtypes');
@@ -240,7 +257,7 @@ class RelationsTable extends AppTable
       } else {
 	return self::whereNoRecord();
       }
-      return $ret;
+      return array_merge($ret, self::whereNoBaryon());
     }
 
     public static function whereByQuarkProperty($quark_id, $quark_property_id)
@@ -299,7 +316,7 @@ class RelationsTable extends AppTable
       } else {
 	return self::whereNoRecord();
       }
-      return $where;
+      return array_merge($where, self::whereNoBaryon());
     }
     
     /*******************************************************/

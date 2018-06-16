@@ -71,13 +71,7 @@ class GluonsController extends AppController
     public function view($quark_id = null, $gluon_sides = 'active')
     {
       $Relations = TableRegistry::get('Relations');
-      if ($gluon_sides == 'active') {
-	$where = ['Relations.active_id' => $quark_id];
-      } elseif ($gluon_sides == 'passive') {
-	$where = ['Relations.passive_id' => $quark_id];
-      } else {
-	$where = $Relations->whereNoRecord();
-      }
+      $where = $Relations->whereByGluonSides($quark_id, $gluon_sides);
       $query = $Relations->find()->where($where)->order(['Relations.start' => 'Desc']);
       $this->set('articles', $this->paginate($query));
       $this->set('_serialize', 'articles');
