@@ -492,7 +492,7 @@ class SubjectsTable extends AppTable
       $query = $this->find('all');
 
       if (self::$cachedRead) {
-	$query = $query->cache('Subjects_' . $this->lang . '_' . $search_words);
+	$query = $query->cache('Subjects_' . $this->lang . '_' . $search_words . '_' . $limit);
       }
       $query = $query
 	->contain(['SubjectSearches'])

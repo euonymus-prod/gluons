@@ -38,12 +38,17 @@ class SearchController extends AppController
       if (!array_key_exists('keywords', $this->request->query)) {
 	$subjects = [];
       } else {
+	if (!array_key_exists('limit', $this->request->query)) {
+	  $limit = 20;
+	} else {
+	  $limit = $this->request->query['limit'];
+	}
 	\App\Model\Table\SubjectsTable::$cachedRead = true;
 	$Subjects = TableRegistry::get('Subjects');
-	$subjects = $Subjects->searchForApi($this->request->query['keywords']);
+	$queary = $Subjects->searchForApi($this->request->query['keywords'], $limit);
       }
 
-      $this->set('subjects', $subjects);
+      $this->set('subjects', $this->paginate($queary));
       $this->set('_serialize', 'subjects');
     }
 }
