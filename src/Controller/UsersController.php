@@ -53,25 +53,32 @@ class UsersController extends AppController
       $url = $this->referer(null, true);
       return $this->redirect($url);
     }
+
     public function login()
     {
+	$res = [];
         if ($this->request->is('post')) {
             $user = $this->Auth->identify();
             if ($user) {
                 $this->Auth->setUser($user);
-                //return $this->redirect($this->Auth->redirectUrl());
-		$referer = unserialize($this->Session->read('LoginReferer'));
-		$this->Session->delete('LoginReferer');
+
+		// update api_key, everytime user logged in
+		$selected = $this->Users->get($user['id'], ['contain' => []]);
+		$this->Users->addApiKey($selected);
+		$this->Users->save($selected);
+
 		$this->Session->delete('PrivacyMode');
 		Cache::clear(false); 
-                return $this->redirect($referer);
-            }
-            $this->_setFlash(__('Invalid username or password, try again'), true);
-        } else {
-	  $this->Session->write('LoginReferer', serialize($this->referer()));
+                /* return $this->redirect($referer); */
+
+		$res = $user;
+		$res['message'] = 'The user has been logged in.';
+            } else {
+	      $res['message'] = 'The user could not be logged in. Please, try again.';
+	    }
 	}
-	$title = 'Login to gluons';
-        $this->set(compact('title'));
+        $this->set(compact('res'));
+        $this->set('_serialize', 'res');
     }
 
     public function logout()
@@ -80,7 +87,9 @@ class UsersController extends AppController
         $this->Session->write('PrivacyMode', \App\Controller\AppController::PRIVACY_ALL);
         //return $this->redirect($this->Auth->logout());
 	$this->Auth->logout();
-	return $this->redirect($this->referer());
+	$res['message'] = 'Logged out';
+        $this->set(compact('res'));
+        $this->set('_serialize', 'res');
     }
 
     /**
@@ -91,20 +100,19 @@ class UsersController extends AppController
     public function add()
     {
         $user = $this->Users->newEntity();
+	$res = [];
         if ($this->request->is('post')) {
             $user = $this->Users->patchEntity($user, $this->request->data);
             if ($this->Users->save($user)) {
-                $this->_setFlash(__('The user has been saved.'));
-
-                return $this->redirect(['controller' => 'Users', 'action' => 'login']);
+	      $res = $user;
+	      $res['message'] = 'The user has been saved.';
             } else {
-                $this->_setFlash(__('The user could not be saved. Please, try again.'), true);
+	      $res['message'] = 'The user could not be saved. Please, try again.';
             }
         }
-	$title = 'Create a FREE account';
 
-        $this->set(compact('user', 'title'));
-        $this->set('_serialize', ['user']);
+        $this->set(compact('res'));
+        $this->set('_serialize', 'res');
     }
 
     /**
@@ -134,5 +142,21 @@ class UsersController extends AppController
 
         $this->set(compact('user', 'title'));
         $this->set('_serialize', ['user']);
+    }
+
+    public function delete($id = null)
+    {
+        $this->request->allowMethod(['post', 'delete']);
+        $user = $this->Users->get($id);
+
+	$res = [];
+        if ($this->Users->delete($user)) {
+	    Cache::clear(false); 
+	    $res['message'] = 'The user has been deleted.';
+        } else {
+	    $res['message'] = 'The user could not be deleted. Please, try again.';
+        }
+        $this->set(compact('res'));
+        $this->set('_serialize', 'res');
     }
 }

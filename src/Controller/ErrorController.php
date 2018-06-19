@@ -31,6 +31,13 @@ class ErrorController extends AppController
     public function initialize()
     {
         $this->loadComponent('RequestHandler');
+
+	/* Added for API ******************************************/
+	$this->RequestHandler->renderAs($this, 'json');
+	$this->response->type('application/json');
+	$this->response->header("Access-Control-Allow-Origin: *");
+	/**********************************************************/
+
         $this->loadComponent('Auth', [
             'authorize' => ['Controller'],
             'loginRedirect' => [

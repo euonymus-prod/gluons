@@ -16,6 +16,7 @@ namespace App\Controller;
 
 use Cake\Controller\Controller;
 use Cake\Event\Event;
+use Cake\Controller\Component\AuthComponent;
 
 use Cake\Core\Configure;
 use Cake\Routing\Router;
@@ -86,18 +87,31 @@ class AppController extends Controller
         parent::initialize();
 
         $this->loadComponent('RequestHandler');
+
+	/* Added for API ******************************************/
+	$this->RequestHandler->renderAs($this, 'json');
+	$this->response->type('application/json');
+	$this->response->header("Access-Control-Allow-Origin: *");
+	/**********************************************************/
+
         $this->loadComponent('Flash');
 
-        $this->loadComponent('Auth', [
-            'authorize' => ['Controller'],
-            'loginRedirect' => [
-                'controller' => null,
-                'action' => 'index'
-            ],
-            'logoutRedirect' => [
-                'controller' => null,
-                'action' => 'index'
-            ]
+	$this->loadComponent('Auth', [
+             'authenticate' => [
+                AuthComponent::ALL => ['userModel' => 'Users'],
+                'Basic' => [
+                   'fields' => ['username' => 'username', 'password' => 'api_key'],
+                ],
+                'Form' => [
+                   'fields' => ['username' => 'username', 'password' => 'password'],
+                ],
+             ],
+	     'storage' => 'Memory',
+	     'unauthorizedRedirect' => false,
+
+	     'authorize' => ['Controller'],
+	     'loginRedirect' => false,
+	     'logoutRedirect' => false,
         ]);
 
         $this->loadComponent('LangMngr');

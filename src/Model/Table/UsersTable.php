@@ -6,6 +6,12 @@ use Cake\ORM\RulesChecker;
 use Cake\ORM\Table;
 use Cake\Validation\Validator;
 
+use Cake\Auth\DefaultPasswordHasher;
+use Cake\Utility\Security;
+use Cake\Event\Event;
+
+
+
 /**
  * Users Model
  *
@@ -38,6 +44,34 @@ class UsersTable extends Table
 
         $this->addBehavior('Timestamp');
     }
+
+    public function beforeSave(Event $event)
+    {
+      $entity = $event->getData('entity');
+
+      if ($entity->isNew()) {
+	$entity = self::addApiKey($entity);
+      }
+      return true;
+    }
+
+    public static function addApiKey($data) {
+	$apiKeys = self::generateApiKey();
+	$data->api_key_plain = $apiKeys['api_key_plain'];
+	$data->api_key = $apiKeys['api_key'];
+	return $data;
+    }
+    public static function generateApiKey() {
+      // API の 'トークン' を生成
+      $api_key_plain = Security::hash(Security::randomBytes(32), 'sha256', false);
+
+      // ログインの際に BasicAuthenticate がチェックする
+      // トークンを Bcrypt で暗号化
+      $hasher = new DefaultPasswordHasher();
+      $api_key = $hasher->hash($api_key_plain);
+      return ['api_key' => $api_key, 'api_key_plain' => $api_key_plain];
+    }
+
 
     public function isOwnedBy($id, $userId)
     {
