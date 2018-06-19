@@ -19,7 +19,7 @@ class QuarkController extends AppController
 {
     public function isAuthorized($user)
     {
-        if (in_array($this->request->action, ['add', 'edit', 'confirm'])) {
+        if (in_array($this->request->action, ['view', 'listview'])) {
             return true;
         }
 
@@ -49,7 +49,26 @@ class QuarkController extends AppController
       $query = $Subjects->find()->where($Subjects->wherePrivacyName($name));
       $this->set('articles', $query->first());
       $this->set('_serialize', 'articles');
-	
+    }
+
+    public function listview($name = null)
+    {
+        $Subjects = TableRegistry::get('Subjects');
+      
+        $options = [
+            'conditions' => [$Subjects->wherePrivacy()]
+        ];
+	$order = false;
+        if (!isset($this->request->query['type']) || $this->request->query['type'] != 0) {
+	  $options['order'] = ['Subjects.created' => 'desc'];
+	  $order = true;
+        }
+        $this->paginate = $options;
+
+        $query = $this->paginate($Subjects);
+
+	$this->set('subjects', $query);
+	$this->set('_serialize', 'subjects');
     }
 
 }
