@@ -56,7 +56,7 @@ class UsersController extends AppController
 
     public function login()
     {
-	$res = [];
+	$res = ['status' => 0];
         if ($this->request->is('post')) {
             $user = $this->Auth->identify();
             if ($user) {
@@ -72,6 +72,7 @@ class UsersController extends AppController
                 /* return $this->redirect($referer); */
 
 		$res = $user;
+		$res['status'] = 1;
 		$res['message'] = 'The user has been logged in.';
             } else {
 	      $res['message'] = 'The user could not be logged in. Please, try again.';
