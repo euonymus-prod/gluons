@@ -64,6 +64,10 @@ Router::scope('/', function (RouteBuilder $routes) {
     $routes->connect('/gluons/*', ['controller' => 'Gluons', 'action' => 'view']);
     $routes->connect('/search/*', ['controller' => 'Search', 'action' => 'index']);
 
+    /**************************************************************************/
+    $routes->connect('/qtype_properties/*', ['controller' => 'QtypeProperties', 'action' => 'index']);
+    /**************************************************************************/
+
     /**
      * Connect catchall routes for all controllers.
      *
