@@ -24,8 +24,16 @@ class QtypePropertiesController extends AppController
     {
       $QtypeProperties = TableRegistry::get('QtypeProperties');
       $query = $QtypeProperties->find()->contain(['QuarkProperties']);
-      $this->set('articles', $query->all());
-      $this->set('_serialize', 'articles');
+
+      $map = [];
+      foreach($query as $key => $val) {
+	if (!array_key_exists($val['quark_type_id'], $map)) {
+	  $map[$val['quark_type_id']] = [];
+	}
+	$map[$val['quark_type_id']][] = $val;
+      }
+      $this->set('map', $map);
+      $this->set('_serialize', 'map');
     }
 
 }
