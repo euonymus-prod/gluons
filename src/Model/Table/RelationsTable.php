@@ -260,6 +260,98 @@ class RelationsTable extends AppTable
       return array_merge($ret, self::whereNoBaryon());
     }
 
+    public static function constGluonTypesByQuarkProperties($quark_id, $quark_type_id = null) {
+      $quark_property_ids = [];
+      if (!$quark_type_id) {
+	$Subjects = TableRegistry::get('Subjects');
+	$subject = $Subjects->find()->where(['id' => $quark_id])->contain(['QuarkProperties'])->first();
+	foreach($subject->quark_properties as $key => $val) {
+	  $quark_property_ids[] = $val['id'];
+	}
+      } else {
+	$QtypeProperties = TableRegistry::get('QtypeProperties');
+	$query = $QtypeProperties->find()->where(['quark_type_id' => $quark_type_id])->contain(['QuarkProperties']);
+	foreach($query as $key => $val) {
+	  $quark_property_ids[] = $val->quark_property['id'];
+	}
+      }
+
+      if (empty($quark_property_ids)) {
+	return self::whereNoRecord();
+      }
+      $QpropertyGtypes = TableRegistry::get('QpropertyGtypes');
+      $query = $QpropertyGtypes->find()->where(['QpropertyGtypes.quark_property_id in' => $quark_property_ids]);
+      if ($query->count() == 0) {
+      	return self::whereNoRecord();
+      }
+
+      $res = [];
+      foreach($query as $key => $val) {
+	if (!array_key_exists($val->quark_property_id, $res)) {
+	  $res[$val->quark_property_id] = [];
+	}
+	$res[$val->quark_property_id][] = $val;
+      }
+      return $res;
+    }
+    // 汎用的に利用する事は考えていない。ビジネスロジックに合わせてSQL回数を減らす様にチューニングしている。
+    public static function whereByQpropertyGtypes($quark_id, $qproperty_gtypes_by_qproperty_id) {
+      if (empty($qproperty_gtypes_by_qproperty_id)) {
+	return self::whereNoRecord();
+      }
+
+      $active_gluon_types = [];
+      $passive_gluon_types = [];
+      $bothsides_gluon_types = [];
+      foreach($qproperty_gtypes_by_qproperty_id as $qproperty_gtypes) {
+	foreach($qproperty_gtypes as $val) {
+	  if ($val->sides == 0) {
+	    $bothsides_gluon_types[] = $val->gluon_type_id;
+	  } elseif ($val->sides == 1) {
+	    $active_gluon_types[] = $val->gluon_type_id;
+	  } elseif ($val->sides == 2) {
+	    $passive_gluon_types[] = $val->gluon_type_id;
+	  }
+	}
+      }
+
+      $active = false;
+      $passive = false;
+      $bothsides = false;
+      if (!empty($active_gluon_types)) {
+	$active = ['Relations.active_id' => $quark_id,
+		   'Relations.gluon_type_id in' => $active_gluon_types];
+      }
+      if (!empty($passive_gluon_types)) {
+	$passive = ['Relations.passive_id' => $quark_id,
+		   'Relations.gluon_type_id in' => $passive_gluon_types];
+      }
+      if (!empty($bothsides_gluon_types)) {
+	$bothsides = [
+		      'or' => ['Relations.active_id' => $quark_id, 'Relations.passive_id' => $quark_id],
+		      'Relations.gluon_type_id in' => $bothsides_gluon_types
+		    ];
+      }
+      if ($active && $passive && $bothsides) {
+	$where = ['or' => [$active, $passive, $bothsides]];
+      } elseif ($active && $passive) {
+	$where = ['or' => [$active, $passive]];
+      } elseif ($active && $bothsides) {
+	$where = ['or' => [$active, $bothsides]];
+      } elseif ($passive && $bothsides) {
+	$where = ['or' => [$passive, $bothsides]];
+      } elseif ($bothsides) {
+	$where = $bothsides;
+      } elseif ($active) {
+	$where = $active;
+      } elseif ($passive) {
+	$where = $passive;
+      } else {
+	return self::whereNoRecord();
+      }
+      return array_merge($where, self::whereNoBaryon());
+    }
+
     public static function whereByQuarkProperty($quark_id, $quark_property_id)
     {
       if (empty($quark_id)) {

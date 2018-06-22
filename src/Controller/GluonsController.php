@@ -44,13 +44,44 @@ class GluonsController extends AppController
         ];
     }
 
-    public function initialize()
+    public function view($quark_id = null, $quark_type_id = null)
     {
-      parent::initialize();
-      $this->loadComponent('RequestHandler');
-      $this->RequestHandler->renderAs($this, 'json');
-      $this->response->type('application/json');
-      $this->response->header("Access-Control-Allow-Origin: *");
+      // http://ja.localhost:8765/gluons/fa38c825-363d-4157-b972-fc8815f1f23c
+      // http://ja.localhost:8765/gluons/fa38c825-363d-4157-b972-fc8815f1f23c/2
+      $Relations = TableRegistry::get('Relations');
+
+      $gluonTypesByQuarkProperties = $Relations->constGluonTypesByQuarkProperties($quark_id, $quark_type_id);
+      $where = $Relations->whereByQpropertyGtypes($quark_id, $gluonTypesByQuarkProperties);
+      $query = $Relations->find()->where($where)->order(['Relations.start' => 'Desc'])
+	->contain(['Actives', 'Passives']);
+
+
+      $gluons_by_property = [];
+      foreach($query as $key => $val) {
+	foreach($gluonTypesByQuarkProperties as $key => $gluonTypes) {
+	  foreach($gluonTypes as $key => $gluonType) {
+	    if ($gluonType->gluon_type_id == $val->gluon_type_id) {
+	      if (!array_key_exists($gluonType->quark_property_id, $gluons_by_property)) {
+		$gluons_by_property[$gluonType->quark_property_id] = [];
+	      }
+	      $gluons_by_property[$gluonType->quark_property_id][] = $val;
+	    }
+	  }
+	}
+      }
+
+      $where = $Relations->whereByNoQuarkProperty($quark_id, 'active');
+      $queryActives = $Relations->find()->where($where)->order(['Relations.start' => 'Desc'])
+		->contain(['Actives', 'Passives']);
+      $gluons_by_property['active'] = $queryActives->all()->toArray();
+
+      $where = $Relations->whereByNoQuarkProperty($quark_id, 'passive');
+      $queryPassives = $Relations->find()->where($where)->order(['Relations.start' => 'Desc'])
+		->contain(['Actives', 'Passives']);
+      $gluons_by_property['passive'] = $queryPassives->all()->toArray();
+
+      $this->set('articles', $gluons_by_property);
+      $this->set('_serialize', 'articles');
     }
 
     // $quark_property_id is quark_property_id, but 'active', 'passive' are exceptionally accepted
@@ -68,7 +99,7 @@ class GluonsController extends AppController
       $this->set('_serialize', 'articles');
     }
 
-    public function view($quark_id = null, $gluon_sides = 'active')
+    public function view_bk($quark_id = null, $gluon_sides = 'active')
     {
       $Relations = TableRegistry::get('Relations');
       $where = $Relations->whereByGluonSides($quark_id, $gluon_sides);
