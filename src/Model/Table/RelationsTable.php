@@ -304,6 +304,8 @@ class RelationsTable extends AppTable
       $passive_gluon_types = [];
       $bothsides_gluon_types = [];
       foreach($qproperty_gtypes_by_qproperty_id as $qproperty_gtypes) {
+
+	if (!$qproperty_gtypes) continue;
 	foreach($qproperty_gtypes as $val) {
 	  if ($val->sides == 0) {
 	    $bothsides_gluon_types[] = $val->gluon_type_id;
