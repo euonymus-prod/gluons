@@ -265,6 +265,7 @@ class RelationsTable extends AppTable
       if (!$quark_type_id) {
 	$Subjects = TableRegistry::get('Subjects');
 	$subject = $Subjects->find()->where(['id' => $quark_id])->contain(['QuarkProperties'])->first();
+	if (empty($subject)) return [];
 	foreach($subject->quark_properties as $key => $val) {
 	  $quark_property_ids[] = $val['id'];
 	}
