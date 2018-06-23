@@ -53,7 +53,7 @@ class GluonsController extends AppController
       $gluonTypesByQuarkProperties = $Relations->constGluonTypesByQuarkProperties($quark_id, $quark_type_id);
       $where = $Relations->whereByQpropertyGtypes($quark_id, $gluonTypesByQuarkProperties);
       $query = $Relations->find()->where($where)->order(['Relations.start' => 'Desc'])
-	->contain(['Actives', 'Passives']);
+	->contain(['Actives', 'Passives'])->limit(100);
 
 
       $gluons_by_property = [];
@@ -72,12 +72,12 @@ class GluonsController extends AppController
 
       $where = $Relations->whereByNoQuarkProperty($quark_id, 'active');
       $queryActives = $Relations->find()->where($where)->order(['Relations.start' => 'Desc'])
-		->contain(['Actives', 'Passives']);
+		->contain(['Actives', 'Passives'])->limit(100);
       $gluons_by_property['active'] = $queryActives->all()->toArray();
 
       $where = $Relations->whereByNoQuarkProperty($quark_id, 'passive');
       $queryPassives = $Relations->find()->where($where)->order(['Relations.start' => 'Desc'])
-		->contain(['Actives', 'Passives']);
+		->contain(['Actives', 'Passives'])->limit(100);
       $gluons_by_property['passive'] = $queryPassives->all()->toArray();
 
       $this->set('articles', $gluons_by_property);
