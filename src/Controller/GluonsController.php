@@ -55,17 +55,28 @@ class GluonsController extends AppController
       $query = $Relations->find()->where($where)->order(['Relations.start' => 'Desc'])
 	->contain(['Actives', 'Passives'])->limit(100);
 
-
       $gluons_by_property = [];
       foreach($query as $key => $val) {
+
 	foreach($gluonTypesByQuarkProperties as $key => $gluonTypes) {
+	  $flg = false;
 	  foreach($gluonTypes as $key => $gluonType) {
-	    if ($gluonType->gluon_type_id == $val->gluon_type_id) {
+	    if ($gluonType->gluon_type_id != $val->gluon_type_id) {
+	      continue;
+	    }
+	    if ((($gluonType->sides == 1) && ($val->active_id == $quark_id)) ||
+		(($gluonType->sides == 2) && ($val->passive_id == $quark_id)) ||
+		($gluonType->sides == 0) ) {
 	      if (!array_key_exists($gluonType->quark_property_id, $gluons_by_property)) {
 		$gluons_by_property[$gluonType->quark_property_id] = [];
 	      }
 	      $gluons_by_property[$gluonType->quark_property_id][] = $val;
+	      $flg = true;
+	      break;
 	    }
+	  }
+	  if ($flg) {
+	    break;
 	  }
 	}
       }
