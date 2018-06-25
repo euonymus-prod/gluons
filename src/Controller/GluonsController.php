@@ -48,12 +48,14 @@ class GluonsController extends AppController
     {
       // http://ja.localhost:8765/gluons/fa38c825-363d-4157-b972-fc8815f1f23c
       // http://ja.localhost:8765/gluons/fa38c825-363d-4157-b972-fc8815f1f23c/2
+      $limit = $this->request->getQuery('limit');
+      if (!$limit) $limit = 100;
       $Relations = TableRegistry::get('Relations');
 
       $gluonTypesByQuarkProperties = $Relations->constGluonTypesByQuarkProperties($quark_id, $quark_type_id);
       $where = $Relations->whereByQpropertyGtypes($quark_id, $gluonTypesByQuarkProperties);
       $query = $Relations->find()->where($where)->order(['Relations.start' => 'Desc'])
-	->contain(['Actives', 'Passives'])->limit(100);
+	->contain(['Actives', 'Passives'])->limit($limit);
 
       $gluons_by_property = [];
       foreach($query as $key => $val) {
@@ -83,15 +85,32 @@ class GluonsController extends AppController
 
       $where = $Relations->whereByNoQuarkProperty($quark_id, 'active');
       $queryActives = $Relations->find()->where($where)->order(['Relations.start' => 'Desc'])
-		->contain(['Actives', 'Passives'])->limit(100);
+		->contain(['Actives', 'Passives'])->limit($limit);
       $gluons_by_property['active'] = $queryActives->all()->toArray();
 
       $where = $Relations->whereByNoQuarkProperty($quark_id, 'passive');
       $queryPassives = $Relations->find()->where($where)->order(['Relations.start' => 'Desc'])
-		->contain(['Actives', 'Passives'])->limit(100);
+		->contain(['Actives', 'Passives'])->limit($limit);
       $gluons_by_property['passive'] = $queryPassives->all()->toArray();
 
-      $this->set('articles', $gluons_by_property);
+      $count = 0;
+      $final_result = [];
+      foreach($gluons_by_property as $key => $val) {
+	$inner = [];
+	foreach($val as $k => $v) {
+	  $inner[$k] = $v;
+	  ++$count;
+	  if ($count >= $limit) {
+	    break;
+	  }
+	}
+	$final_result[$key] = $inner;
+	if ($count >= $limit) {
+	  break;
+	}
+      }
+
+      $this->set('articles', $final_result);
       $this->set('_serialize', 'articles');
     }
 
