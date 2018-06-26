@@ -97,8 +97,6 @@ class AppController extends Controller
         $this->loadComponent('Flash');
 
 
-/* $this->header('Access-Control-Allow-Origin: *'); */
-/* $this->header('Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept'); */
 
 
 	$this->loadComponent('Auth', [
@@ -160,8 +158,13 @@ class AppController extends Controller
 
     public function beforeFilter(Event $event)
     {
-// MEMO: Temporary
-        /* $this->Auth->allow(['index', 'view', 'display', 'relations', 'search', 'listview', 'add']); */
+        // CORS 対策
+        // https://book.cakephp.org/3.0/ja/controllers/request-response.html
+        if ($this->request->is('options')) {
+	  $this->setCorsHeaders();
+	  return $this->response;
+	}
+
         $this->Auth->allow(['index', 'view', 'display', 'relations', 'search', 'listview']);
 	// pass the auth information to view 
         $this->set('auth', $this->Auth);
@@ -175,11 +178,35 @@ class AppController extends Controller
      */
     public function beforeRender(Event $event)
     {
+        // CORS 対策
+        // https://book.cakephp.org/3.0/ja/controllers/request-response.html
+        $this->setCorsHeaders();
+
         if (!array_key_exists('_serialize', $this->viewVars) &&
             in_array($this->response->type(), ['application/json', 'application/xml'])
         ) {
             $this->set('_serialize', true);
         }
+    }
+
+    private function setCorsHeaders() {
+      // CORS 対策
+      // https://book.cakephp.org/3.0/ja/controllers/request-response.html
+      // 
+      // 参照: https://stackoverflow.com/questions/39365229/cakephp-3-rest-api-cors-request-and-options-method
+      // 
+      // CakePHP3でのヘッダ設定
+      //Access-Control-Allow-Origin
+      //Access-Control-Allow-Headers
+      //Access-Control-Allow-Methods
+      $this->response->cors($this->request)
+        ->allowOrigin(['*'])
+        ->allowMethods(['GET,PUT,POST,DELETE,PATCH,OPTIONS'])
+        ->allowHeaders(['x-xsrf-token', 'Origin', 'Content-Type', 'X-Auth-Token', 'Authorization'])
+        ->allowCredentials(['true'])
+        ->exposeHeaders(['Link'])
+        ->maxAge(300)
+        ->build();
     }
 
     public function _setFlash($string, $error = false)
