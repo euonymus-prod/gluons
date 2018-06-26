@@ -71,7 +71,7 @@ class UsersController extends AppController
 		Cache::clear(false); 
                 /* return $this->redirect($referer); */
 
-		$res = $user;
+		$res = $selected;
 		$res['status'] = 1;
 		$res['message'] = 'The user has been logged in.';
             } else {
