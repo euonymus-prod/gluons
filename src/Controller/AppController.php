@@ -96,6 +96,11 @@ class AppController extends Controller
 
         $this->loadComponent('Flash');
 
+
+/* $this->header('Access-Control-Allow-Origin: *'); */
+/* $this->header('Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept'); */
+
+
 	$this->loadComponent('Auth', [
              'authenticate' => [
                 AuthComponent::ALL => ['userModel' => 'Users'],
@@ -155,6 +160,8 @@ class AppController extends Controller
 
     public function beforeFilter(Event $event)
     {
+// MEMO: Temporary
+        /* $this->Auth->allow(['index', 'view', 'display', 'relations', 'search', 'listview', 'add']); */
         $this->Auth->allow(['index', 'view', 'display', 'relations', 'search', 'listview']);
 	// pass the auth information to view 
         $this->set('auth', $this->Auth);
