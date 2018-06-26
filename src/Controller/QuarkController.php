@@ -19,7 +19,7 @@ class QuarkController extends AppController
 {
     public function isAuthorized($user)
     {
-        if (in_array($this->request->action, ['view', 'listview'])) {
+        if (in_array($this->request->action, ['view', 'listview', 'add'])) {
             return true;
         }
 
@@ -73,4 +73,11 @@ class QuarkController extends AppController
 	$this->set('_serialize', 'subjects');
     }
 
+    public function add()
+    {
+      pr('here');
+        $newQuark = ['hoge' => 'hage'];
+	$this->set('newQuark', $newQuark);
+	$this->set('_serialize', 'newQuark');
+    }
 }
