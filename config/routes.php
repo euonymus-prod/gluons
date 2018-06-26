@@ -66,6 +66,7 @@ Router::scope('/', function (RouteBuilder $routes) {
 
     /**************************************************************************/
     $routes->connect('/qtype_properties/*', ['controller' => 'QtypeProperties', 'action' => 'index']);
+    $routes->connect('/quark_types/*', ['controller' => 'QuarkTypes', 'action' => 'index']);
     $routes->connect('/gluons/*', ['controller' => 'Gluons', 'action' => 'view']);
     /**************************************************************************/
 
