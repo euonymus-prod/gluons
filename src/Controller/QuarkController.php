@@ -75,9 +75,33 @@ class QuarkController extends AppController
 
     public function add()
     {
-      pr('here');
-        $newQuark = ['hoge' => 'hage'];
-	$this->set('newQuark', $newQuark);
+	$res = ['status' => 0, 'message' => 'Not accepted'];
+
+        // Existence check
+        if ($this->request->is('post')) {
+	  $Subjects = TableRegistry::get('Subjects');
+	  $query = $Subjects->findByName($this->request->data['name']);
+	  if (iterator_count($query)) {
+	    $res = ['message' => 'The user already exists'];
+	  } else {
+	    // Saving
+	    $subject = $Subjects->newEntity();
+	    $subject = $Subjects->formToSaving($this->request->data);
+
+	    $subject->user_id = $this->Auth->user('id');
+	    $subject->last_modified_user = $this->Auth->user('id');
+
+            if ($savedSubject = $Subjects->save($subject)) {
+	      $res['status'] = 1;
+	      $res['message'] = 'The quark has been saved.';
+	      $res['result'] = $savedSubject;
+	    } else {
+	      $res['message'] = 'The quark could not be saved. Please, try again.';
+	      $res['result'] = $savedSubject;
+	    }
+	  }
+	}
+	$this->set('newQuark', $res);
 	$this->set('_serialize', 'newQuark');
     }
 }
