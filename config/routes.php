@@ -60,6 +60,7 @@ Router::scope('/', function (RouteBuilder $routes) {
     $routes->connect('/quark/*', ['controller' => 'Quark', 'action' => 'view']);
     $routes->connect('/quarks/*', ['controller' => 'Quark', 'action' => 'listview']);
     $routes->connect('/add_quark/*', ['controller' => 'Quark', 'action' => 'add']);
+    $routes->connect('/delete_quark/*', ['controller' => 'Quark', 'action' => 'delete']);
     $routes->connect('/quark_properties/*', ['controller' => 'QuarkProperties', 'action' => 'index']);
     /* $routes->connect('/gluons/by_quark_property/\*', ['controller' => 'Gluons', 'action' => 'by_quark_property']); */
     /* $routes->connect('/gluons/\*', ['controller' => 'Gluons', 'action' => 'view']); */

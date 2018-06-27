@@ -26,7 +26,8 @@ class QuarkController extends AppController
         // The owner of a subject can delete it
         if (in_array($this->request->action, ['delete'])) {
             $subjectId = $this->request->params['pass'][0];
-            if ($this->Subjects->isOwnedBy($subjectId, $user['id'])) {
+	    $Subjects = TableRegistry::get('Subjects');
+            if ($Subjects->isOwnedBy($subjectId, $user['id'])) {
                 return true;
             }
         }
@@ -103,5 +104,23 @@ class QuarkController extends AppController
 	}
 	$this->set('newQuark', $res);
 	$this->set('_serialize', 'newQuark');
+    }
+
+    public function delete($id = null)
+    {
+	$res = ['status' => 0, 'message' => 'Not accepted'];
+
+        $this->request->allowMethod(['delete']);
+	$Subjects = TableRegistry::get('Subjects');
+        $subject = $Subjects->get($id);
+
+        if ($Subjects->delete($subject)) {
+	    $res['status'] = 1;
+	    $res['message'] = 'The quark has been deleted.';
+        } else {
+	    $res['message'] = 'The quark could not be deleted. Please, try again.';
+        }
+	$this->set('deleted', $res);
+	$this->set('_serialize', 'deleted');
     }
 }
