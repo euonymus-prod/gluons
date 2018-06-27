@@ -78,11 +78,11 @@ class QuarkController extends AppController
 	$res = ['status' => 0, 'message' => 'Not accepted'];
 
         // Existence check
-        if ($this->request->is('post')) {
+        if ($this->request->is('post') && array_key_exists('name', $this->request->data)) {
 	  $Subjects = TableRegistry::get('Subjects');
 	  $query = $Subjects->findByName($this->request->data['name']);
 	  if (iterator_count($query)) {
-	    $res = ['message' => 'The user already exists'];
+	    $res['message'] = 'The user already exists';
 	  } else {
 	    // Saving
 	    $subject = $Subjects->newEntity();
