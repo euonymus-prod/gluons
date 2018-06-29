@@ -43,12 +43,22 @@ class QuarkController extends AppController
       $this->response->header("Access-Control-Allow-Origin: *");
     }
 
-    // API endpoint:  /quark/:id
+    // API endpoint:  /quark/:name
     public function view($name = null)
     {
       $Subjects = TableRegistry::get('Subjects');
       
       $query = $Subjects->find()->where($Subjects->wherePrivacyName($name));
+      $this->set('articles', $query->first());
+      $this->set('_serialize', 'articles');
+    }
+
+    // API endpoint:  /quark_by_id/:id
+    public function quarkById($id = null)
+    {
+      $Subjects = TableRegistry::get('Subjects');
+      
+      $query = $Subjects->findById($id);
       $this->set('articles', $query->first());
       $this->set('_serialize', 'articles');
     }

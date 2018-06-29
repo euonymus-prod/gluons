@@ -58,6 +58,7 @@ Router::scope('/', function (RouteBuilder $routes) {
 
     $routes->connect('/pickups/*', ['controller' => 'Pickups', 'action' => 'view']);
     $routes->connect('/quark/*', ['controller' => 'Quark', 'action' => 'view']);
+    $routes->connect('/quark_by_id/*', ['controller' => 'Quark', 'action' => 'quarkById']);
     $routes->connect('/quarks/*', ['controller' => 'Quark', 'action' => 'listview']);
     $routes->connect('/add_quark/*', ['controller' => 'Quark', 'action' => 'add']);
     $routes->connect('/delete_quark/*', ['controller' => 'Quark', 'action' => 'delete']);
