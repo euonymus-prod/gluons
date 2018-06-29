@@ -19,7 +19,7 @@ class QuarkController extends AppController
 {
     public function isAuthorized($user)
     {
-        if (in_array($this->request->action, ['view', 'listview', 'add'])) {
+        if (in_array($this->request->action, ['view', 'listview', 'add', 'edit'])) {
             return true;
         }
 
@@ -111,6 +111,30 @@ class QuarkController extends AppController
 	      $res['result'] = $savedSubject;
 	    }
 	  }
+	}
+	$this->set('newQuark', $res);
+	$this->set('_serialize', 'newQuark');
+    }
+
+    public function edit($id = null)
+    {
+	$res = ['status' => 0, 'message' => 'Not accepted'];
+        $Subjects = TableRegistry::get('Subjects');
+        $subject = $Subjects->findById($id);
+        if ($this->request->is(['patch', 'post', 'put']) && ($subject->count() == 1)) {
+            $subject = $Subjects->formToEditing($subject->first(), $this->request->data);
+
+            $subject->last_modified_user = $this->Auth->user('id');
+            if ($savedSubject = $Subjects->save($subject)) {
+	      $res['status'] = 1;
+	      $res['message'] = 'The quark has been saved.';
+	      $res['result'] = $savedSubject;
+	    } else {
+	      $res['message'] = 'The quark could not be saved. Please, try again.';
+	      $res['result'] = $savedSubject;
+            }
+        } else {
+	    $res['message'] = 'Invalid';
 	}
 	$this->set('newQuark', $res);
 	$this->set('_serialize', 'newQuark');
