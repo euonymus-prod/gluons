@@ -20,14 +20,15 @@ class GluonsController extends AppController
 {
     public function isAuthorized($user)
     {
-        if (in_array($this->request->action, ['add', 'edit', 'confirm'])) {
+        //if (in_array($this->request->action, ['add', 'confirm'])) {
+        if (in_array($this->request->action, ['add', 'confirm', 'edit'])) {
             return true;
         }
 
-        // The owner of a subject can delete it
         if (in_array($this->request->action, ['delete'])) {
-            $subjectId = $this->request->params['pass'][0];
-            if ($this->Subjects->isOwnedBy($subjectId, $user['id'])) {
+            $relationId = $this->request->params['pass'][0];
+	    $Relations = TableRegistry::get('Relations');
+            if ($Relations->isOwnedBy($relationId, $user['id'])) {
                 return true;
             }
         }
@@ -36,7 +37,7 @@ class GluonsController extends AppController
 
     public function beforeFilter(Event $event)
     {
-        $this->Auth->allow(['view', 'byQuarkProperty']);
+        return parent::beforeFilter($event);
 
 	$this->paginate = [
 	   'contain' => ['Actives', 'Passives'],
@@ -44,7 +45,7 @@ class GluonsController extends AppController
         ];
     }
 
-    public function view($quark_id = null, $quark_type_id = null)
+    public function listview($quark_id = null, $quark_type_id = null)
     {
       // http://ja.localhost:8765/gluons/fa38c825-363d-4157-b972-fc8815f1f23c
       // http://ja.localhost:8765/gluons/fa38c825-363d-4157-b972-fc8815f1f23c/2
@@ -114,6 +115,26 @@ class GluonsController extends AppController
       $this->set('_serialize', 'articles');
     }
 
+    public function delete($id = null)
+    {
+	$res = ['status' => 0, 'message' => 'Not accepted'];
+
+        $this->request->allowMethod(['delete']);
+	$Relations = TableRegistry::get('Relations');
+        //$relation = $Relations->get($id);
+        $relation = $Relations->findById($id)->first();
+
+        /* if ($Relations->delete($relation)) { */
+	/*     $res['status'] = 1; */
+	/*     $res['message'] = 'The gluon has been deleted.'; */
+        /* } else { */
+	/*     $res['message'] = 'The gluon could not be deleted. Please, try again.'; */
+        /* } */
+	$this->set('deleted', $res);
+	$this->set('_serialize', 'deleted');
+    }
+
+/*
     // $quark_property_id is quark_property_id, but 'active', 'passive' are exceptionally accepted
     public function byQuarkProperty($quark_id = null, $quark_property_id = 'active')
     {
@@ -137,4 +158,5 @@ class GluonsController extends AppController
       $this->set('articles', $this->paginate($query));
       $this->set('_serialize', 'articles');
     }
+*/
 }

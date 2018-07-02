@@ -64,14 +64,14 @@ Router::scope('/', function (RouteBuilder $routes) {
     $routes->connect('/edit_quark/*', ['controller' => 'Quark', 'action' => 'edit']);
     $routes->connect('/delete_quark/*', ['controller' => 'Quark', 'action' => 'delete']);
     $routes->connect('/quark_properties/*', ['controller' => 'QuarkProperties', 'action' => 'index']);
-    /* $routes->connect('/gluons/by_quark_property/\*', ['controller' => 'Gluons', 'action' => 'by_quark_property']); */
-    /* $routes->connect('/gluons/\*', ['controller' => 'Gluons', 'action' => 'view']); */
     $routes->connect('/search/*', ['controller' => 'Search', 'action' => 'index']);
 
     /**************************************************************************/
     $routes->connect('/qtype_properties/*', ['controller' => 'QtypeProperties', 'action' => 'index']);
     $routes->connect('/quark_types/*', ['controller' => 'QuarkTypes', 'action' => 'index']);
-    $routes->connect('/gluons/*', ['controller' => 'Gluons', 'action' => 'view']);
+    /* $routes->connect('/gluons/by_quark_property/\*', ['controller' => 'Gluons', 'action' => 'by_quark_property']); */
+    /* $routes->connect('/gluons/\*', ['controller' => 'Gluons', 'action' => 'view']); */
+    $routes->connect('/gluons/list/*', ['controller' => 'Gluons', 'action' => 'listview']);
     /**************************************************************************/
 
     /**
