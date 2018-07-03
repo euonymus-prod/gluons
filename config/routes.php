@@ -69,6 +69,7 @@ Router::scope('/', function (RouteBuilder $routes) {
     /**************************************************************************/
     $routes->connect('/qtype_properties/*', ['controller' => 'QtypeProperties', 'action' => 'index']);
     $routes->connect('/quark_types/*', ['controller' => 'QuarkTypes', 'action' => 'index']);
+    $routes->connect('/gluon_types/*', ['controller' => 'GluonTypes', 'action' => 'index']);
     /* $routes->connect('/gluons/by_quark_property/\*', ['controller' => 'Gluons', 'action' => 'by_quark_property']); */
     /* $routes->connect('/gluons/\*', ['controller' => 'Gluons', 'action' => 'view']); */
     $routes->connect('/gluons/list/*', ['controller' => 'Gluons', 'action' => 'listview']);
