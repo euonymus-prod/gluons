@@ -49,7 +49,12 @@ class QuarkController extends AppController
       $Subjects = TableRegistry::get('Subjects');
       
       $query = $Subjects->find()->where($Subjects->wherePrivacyName($name));
-      $this->set('articles', $query->first());
+      if ($query->count() == 0) {
+	$res = ['status' => 0, 'message' => 'Not found'];
+      } else {
+	$res = $query->first();
+      }
+      $this->set('articles', $res);
       $this->set('_serialize', 'articles');
     }
 
