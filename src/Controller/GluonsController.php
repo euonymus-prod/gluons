@@ -115,48 +115,20 @@ class GluonsController extends AppController
       $this->set('_serialize', 'articles');
     }
 
-    public function add($active_id = null, $baryon_id = null)
+    public function add($active_id = null)
     {
-/*
-        $ready_for_save = false;
+	$res = ['status' => 0, 'message' => 'Not accepted'];
 
-        $Subjects = TableRegistry::get('Subjects');
-
-        // Session check
-        $this->Session->delete('ExistingSubjectsForRelation');
-        $session_relation = unserialize($this->Session->read('SavingRelation'));
-	if ($session_relation) {
-	  $this->Session->delete('SavingRelation');
-	  $active_id = $session_relation['active_id'];
-	  $this->request->data = $session_relation;
-	}
-        $session_passive_id = unserialize($this->Session->read('SavingPassiveId'));
-	if ($session_passive_id !== false) {
-	  $this->Session->delete('SavingPassiveId');
-
-	  if ($session_passive_id != '0') $ready_for_save = true;
-	}
-
-        // Existence check
-        if ($this->request->is('post')) {
-	  $this->request->data['active_id'] = $active_id;
-	  if (!is_null($baryon_id)) {
-	    $this->request->data['baryon_id'] = $baryon_id;
-	  }
-
-	  $query = $Subjects->search($this->request->data['passive']);
-	  if (iterator_count($query)) {
-	    $this->Session->write('ExistingSubjectsForRelation', serialize($query->toArray()));
-	    $this->Session->write('SavingRelation', serialize($this->request->data));
-	    return $this->redirect(['action' => 'confirm']);
-	  }
-	}
-
-	// Save New Subject for the passive_id
-        if ($this->request->is('post') || 
-	    (($session_passive_id !== false) && ($session_passive_id == '0'))
-	    ) {
-
+	$Subjects = TableRegistry::get('Subjects');
+	$activeQuark = $Subjects->findById($active_id)->first();
+	if (!$activeQuark) {
+	} elseif ($this->request->is('post') || array_key_exists('passive', $this->request->data)) {
+	  $Subjects = TableRegistry::get('Subjects');
+	  $quarkToGlue = $Subjects->findByName($this->request->data['passive'])->first();
+	  $passive_id = false;
+	  if ($quarkToGlue) {
+	    $passive_id = $quarkToGlue->id;
+	  } else {
 	    $saving_subject = [
 			       'image_path' => '',
 			       'description' => '',
@@ -190,47 +162,36 @@ class GluonsController extends AppController
 	    }
 
             if ($savedSubject = $Subjects->save($subject)) {
-                $this->_setFlash(__('The quark has been saved.')); 
-		$session_passive_id = $savedSubject->id;
+	      $passive_id = $savedSubject->id;
             } else {
-                $this->_setFlash(__('The quark could not be saved. Please, try again.'), true); 
+	      $res['message'] = 'The quark to glue could not be saved. Please, try again.';
+	      $res['result'] = $savedSubject;
             }
-	    $ready_for_save = true;
-	}
+	  }
 
-
-        $relation = $this->Relations->newEntity();
-        if ($ready_for_save) {
-
-            $this->request->data['passive_id'] = $session_passive_id;
-            //$relation = $this->Relations->patchEntity($relation, $this->request->data);
-            $relation = $this->Relations->formToSaving($this->request->data);
+	  if ($passive_id) {
+	    $Relations = TableRegistry::get('Relations');
+	    $relation = $Relations->newEntity();
+            $this->request->data['active_id'] = $active_id;
+            $this->request->data['passive_id'] = $passive_id;
+            $relation = $Relations->formToSaving($this->request->data);
 
             $relation->user_id = $this->Auth->user('id');
             $relation->last_modified_user = $this->Auth->user('id');
 
-            if ($this->Relations->save($relation)) {
-                $this->_setFlash(__('The gluon has been saved.')); 
-
-		Cache::clear(false); 
-		if (is_null($relation->baryon_id)) {
-		  return $this->redirect(['controller' => 'subjects', 'action' => 'relations', $active_id]);
-		} else {
-		  return $this->redirect(['controller' => 'baryons', 'action' => 'relations', $relation->baryon_id, $active_id]);
-		}
+            if ($savedRelation = $Relations->save($relation)) {
+	      $res['status'] = 1;
+	      $res['message'] = 'The gluon has been saved.';
+	      $res['result'] = $savedRelation;
             } else {
-                $this->_setFlash(__('The gluon could not be saved. Please, try again.'), true); 
+	      $res['message'] = 'The gluon could not be saved. Please, try again.';
+	      $res['result'] = $savedRelation;
             }
-        }
-	$active = $Subjects->get($active_id, ['contain' => 'Actives']);
-        $passives = $this->Relations->Passives->find('list', ['limit' => 200]);
+	  }
+	}
 
-
-	$title = 'Add new gluon';
-	$this->set('gluon_types', $this->Relations->GluonTypes->find('list'));
-        $this->set(compact('relation', 'active', 'passives', 'title'));
-        $this->set('_serialize', ['relation']);
-*/
+	$this->set('newQuark', $res);
+	$this->set('_serialize', 'newQuark');
     }
 
     public function delete($id = null)
