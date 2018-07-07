@@ -21,7 +21,7 @@ class GluonsController extends AppController
     public function isAuthorized($user)
     {
         //if (in_array($this->request->action, ['add', 'confirm'])) {
-        if (in_array($this->request->action, ['add', 'confirm', 'edit'])) {
+        if (in_array($this->request->action, ['add', 'one', 'edit'])) {
             return true;
         }
 
@@ -192,6 +192,42 @@ class GluonsController extends AppController
 
 	$this->set('newQuark', $res);
 	$this->set('_serialize', 'newQuark');
+    }
+
+    public function one($id = null)
+    {
+	$res = ['status' => 0, 'message' => 'Not accepted'];
+        $Relations = TableRegistry::get('Relations');
+        $query = $Relations->findById($id)->contain(['Actives', 'Passives']);
+	if ($query->count() == 0) {
+	  $res = ['status' => 0, 'message' => 'Not found'];
+	} else {
+	  $res = $query->first();
+	}
+
+	$this->set('editedGluon', $res);
+	$this->set('_serialize', 'editedGluon');
+    }
+
+    // !!MEMO:  This is not tested yet. 2018-07-08
+    public function edit($id = null)
+    {
+	$res = ['status' => 0, 'message' => 'Not accepted'];
+        $Relations = TableRegistry::get('Relations');
+        $relation = $Relations->findById($id);
+        if ($this->request->is(['patch', 'post', 'put']) && ($relation->count() == 1)) {
+            $relation = $Relations->patchEntity($relation->first(), $this->request->data);
+            if ($savedRelation = $Relations->save($relation)) {
+	      $res['status'] = 1;
+	      $res['message'] = 'The gluon has been saved.';
+	      $res['result'] = $savedRelation;
+            } else {
+	      $res['message'] = 'The gluon could not be saved. Please, try again.';
+	      $res['result'] = $savedSubject;
+            }
+        }
+	$this->set('editedGluon', $res);
+	$this->set('_serialize', 'editedGluon');
     }
 
     public function delete($id = null)
