@@ -203,12 +203,12 @@ class GluonsController extends AppController
         //$relation = $Relations->get($id);
         $relation = $Relations->findById($id)->first();
 
-        /* if ($Relations->delete($relation)) { */
-	/*     $res['status'] = 1; */
-	/*     $res['message'] = 'The gluon has been deleted.'; */
-        /* } else { */
-	/*     $res['message'] = 'The gluon could not be deleted. Please, try again.'; */
-        /* } */
+        if ($Relations->delete($relation)) {
+	    $res['status'] = 1;
+	    $res['message'] = 'The gluon has been deleted.';
+        } else {
+	    $res['message'] = 'The gluon could not be deleted. Please, try again.';
+        }
 	$this->set('deleted', $res);
 	$this->set('_serialize', 'deleted');
     }
