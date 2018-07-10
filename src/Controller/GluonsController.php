@@ -218,6 +218,11 @@ class GluonsController extends AppController
         if ($this->request->is(['patch', 'post', 'put']) && ($relation->count() == 1)) {
             $relation = $Relations->patchEntity($relation->first(), $this->request->data);
             if ($savedRelation = $Relations->save($relation)) {
+
+	      $Subjects = TableRegistry::get('Subjects');
+	      $subject = $Subjects->findById($savedRelation->active_id);
+	      $savedRelation->active = $subject->first();
+
 	      $res['status'] = 1;
 	      $res['message'] = 'The gluon has been saved.';
 	      $res['result'] = $savedRelation;
