@@ -57,7 +57,8 @@ class ContactForm extends Form
         // メールを送信する
         $email = new Email('default');
         $email->from([$data['email'] => $data['name']])
-            ->to('info@gluons.link')
+            //->to('info@gluons.link')
+            ->to('euonymus0220@gmail.com')
             ->subject('gluons: message from contact form')
             ->send($body);
         return true;
