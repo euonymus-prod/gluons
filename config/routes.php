@@ -56,20 +56,23 @@ Router::scope('/', function (RouteBuilder $routes) {
      */
     $routes->connect('/pages/*', ['controller' => 'Pages', 'action' => 'display']);
 
-    $routes->connect('/pickups/*', ['controller' => 'Pickups', 'action' => 'view']);
-    $routes->connect('/quark/*', ['controller' => 'Quark', 'action' => 'view']);
-    $routes->connect('/quark_by_id/*', ['controller' => 'Quark', 'action' => 'quarkById']);
-    $routes->connect('/quarks/*', ['controller' => 'Quark', 'action' => 'listview']);
-    $routes->connect('/add_quark/*', ['controller' => 'Quark', 'action' => 'add']);
-    $routes->connect('/edit_quark/*', ['controller' => 'Quark', 'action' => 'edit']);
-    $routes->connect('/delete_quark/*', ['controller' => 'Quark', 'action' => 'delete']);
-    $routes->connect('/quark_properties/*', ['controller' => 'QuarkProperties', 'action' => 'index']);
-    $routes->connect('/search/*', ['controller' => 'Search', 'action' => 'index']);
-
+    
     /**************************************************************************/
-    $routes->connect('/qtype_properties/*', ['controller' => 'QtypeProperties', 'action' => 'index']);
+    //$routes->connect('/quark_properties/*', ['controller' => 'QuarkProperties', 'action' => 'index']);
     $routes->connect('/quark_types/*', ['controller' => 'QuarkTypes', 'action' => 'index']);
     $routes->connect('/gluon_types/*', ['controller' => 'GluonTypes', 'action' => 'index']);
+    $routes->connect('/qtype_properties/*', ['controller' => 'QtypeProperties', 'action' => 'index']);
+
+    //$routes->connect('/add_quark/*', ['controller' => 'Quark', 'action' => 'add']);
+    //$routes->connect('/edit_quark/*', ['controller' => 'Quark', 'action' => 'edit']);
+    //$routes->connect('/delete_quark/*', ['controller' => 'Quark', 'action' => 'delete']);
+    //$routes->connect('/quark/*', ['controller' => 'Quark', 'action' => 'view']);
+    //$routes->connect('/quark_by_id/*', ['controller' => 'Quark', 'action' => 'quarkById']);
+    //$routes->connect('/quarks/*', ['controller' => 'Quark', 'action' => 'listview']);
+    //$routes->connect('/pickups/*', ['controller' => 'Pickups', 'action' => 'view']);
+    //$routes->connect('/search/*', ['controller' => 'Search', 'action' => 'index']);
+    $routes->connect('/quarks/list/*', ['controller' => 'Quark', 'action' => 'listview']);
+
     /* $routes->connect('/gluons/by_quark_property/\*', ['controller' => 'Gluons', 'action' => 'by_quark_property']); */
     /* $routes->connect('/gluons/\*', ['controller' => 'Gluons', 'action' => 'view']); */
     $routes->connect('/gluons/list/*', ['controller' => 'Gluons', 'action' => 'listview']);
