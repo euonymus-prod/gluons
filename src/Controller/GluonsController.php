@@ -217,6 +217,7 @@ class GluonsController extends AppController
         $relation = $Relations->findById($id);
         if ($this->request->is(['patch', 'post', 'put']) && ($relation->count() == 1)) {
             $relation = $Relations->patchEntity($relation->first(), $this->request->data);
+	    // TODO: なぜかwebからAPIコールするとsaveが失敗する。postmanだと成功する。
             if ($savedRelation = $Relations->save($relation)) {
 
 	      $Subjects = TableRegistry::get('Subjects');
@@ -228,7 +229,7 @@ class GluonsController extends AppController
 	      $res['result'] = $savedRelation;
             } else {
 	      $res['message'] = 'The gluon could not be saved. Please, try again.';
-	      $res['result'] = $savedSubject;
+	      $res['result'] = $savedRelation;
             }
         }
 	$this->set('editedGluon', $res);
