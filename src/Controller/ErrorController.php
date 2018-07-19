@@ -75,6 +75,10 @@ class ErrorController extends AppController
     {
         parent::beforeRender($event);
 
+        // CORS 対策
+        // https://book.cakephp.org/3.0/ja/controllers/request-response.html
+        $this->setCorsHeaders();
+
         $this->viewBuilder()->templatePath('Error');
     }
 
@@ -86,5 +90,16 @@ class ErrorController extends AppController
      */
     public function afterFilter(Event $event)
     {
+    }
+
+    private function setCorsHeaders() {
+      $this->response->cors($this->request)
+        ->allowOrigin(['*'])
+        ->allowMethods(['GET,PUT,POST,DELETE,PATCH,OPTIONS'])
+        ->allowHeaders(['x-xsrf-token', 'Origin', 'Content-Type', 'X-Auth-Token', 'Authorization'])
+        ->allowCredentials(['true'])
+        ->exposeHeaders(['Link'])
+        ->maxAge(300)
+        ->build();
     }
 }
