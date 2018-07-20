@@ -19,7 +19,8 @@ class QuarksController extends AppController
 {
     public function isAuthorized($user)
     {
-        if (in_array($this->request->action, ['name', 'one', 'listview', 'search', 'add', 'edit', 'pickups'])) {
+        if (in_array($this->request->action, ['name', 'one', 'listview', 'search', 'add', 'edit', 'pickups',
+					      'privateName', 'privateListview', 'privateSearch'])) {
             return true;
         }
 
@@ -59,6 +60,20 @@ class QuarksController extends AppController
       $this->set('_serialize', 'articles');
     }
 
+    public function privateName($name = null, $privacy = 1)
+    {
+      $Subjects = TableRegistry::get('Subjects');
+      
+      $query = $Subjects->find()->where($Subjects->wherePrivacyNameExplicitly($name, $privacy));
+      if ($query->count() == 0) {
+	$res = ['status' => 0, 'message' => 'Not found'];
+      } else {
+	$res = $query->first();
+      }
+      $this->set('articles', $res);
+      $this->set('_serialize', 'articles');
+    }
+
     public function one($id = null)
     {
       $Subjects = TableRegistry::get('Subjects');
@@ -68,13 +83,34 @@ class QuarksController extends AppController
       $this->set('_serialize', 'articles');
     }
 
-    // API endpoint:  /quarks
+    // API endpoint:  /quarks/list
     public function listview($name = null)
     {
         $Subjects = TableRegistry::get('Subjects');
       
         $options = [
             'conditions' => [$Subjects->wherePrivacy()]
+        ];
+	$order = false;
+        if (!isset($this->request->query['type']) || $this->request->query['type'] != 0) {
+	  $options['order'] = ['Subjects.created' => 'desc'];
+	  $order = true;
+        }
+        $this->paginate = $options;
+
+        $query = $this->paginate($Subjects);
+
+	$this->set('subjects', $query);
+	$this->set('_serialize', 'subjects');
+    }
+
+    // API endpoint:  /private_quarks/list
+    public function privateListview($name = null, $privacy = 1)
+    {
+        $Subjects = TableRegistry::get('Subjects');
+      
+        $options = [
+            'conditions' => [$Subjects->wherePrivacyExplicitly($privacy)]
         ];
 	$order = false;
         if (!isset($this->request->query['type']) || $this->request->query['type'] != 0) {
@@ -240,6 +276,25 @@ class QuarksController extends AppController
 	\App\Model\Table\SubjectsTable::$cachedRead = true;
 	$Subjects = TableRegistry::get('Subjects');
 	$queary = $Subjects->searchForApi($this->request->query['keywords'], $limit);
+      }
+
+      $this->set('subjects', $this->paginate($queary));
+      $this->set('_serialize', 'subjects');
+    }
+
+    public function privateSearch($privacy = 1)
+    {
+      if (!array_key_exists('keywords', $this->request->query)) {
+	$subjects = [];
+      } else {
+	if (!array_key_exists('limit', $this->request->query)) {
+	  $limit = 20;
+	} else {
+	  $limit = $this->request->query['limit'];
+	}
+	\App\Model\Table\SubjectsTable::$cachedRead = true;
+	$Subjects = TableRegistry::get('Subjects');
+	$queary = $Subjects->searchForApiPrivacy($this->request->query['keywords'], $privacy, $limit);
       }
 
       $this->set('subjects', $this->paginate($queary));

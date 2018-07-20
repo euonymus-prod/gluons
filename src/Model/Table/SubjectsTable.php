@@ -507,6 +507,30 @@ class SubjectsTable extends AppTable
       return $query;
     }
 
+    public function searchForApiPrivacy($search_words, $privacy, $limit = 20)
+    {
+      $expr = self::bigramize($search_words);
+
+      $whereSearch = "MATCH(SubjectSearches.search_words) AGAINST(:search)";
+      $where = [$this->wherePrivacyExplicitly($privacy), $whereSearch];
+      $query = $this->find('all');
+
+      if (self::$cachedRead) {
+	$query = $query->cache('Subjects_' . $this->lang . '_' . $search_words . '_' . $limit);
+      }
+      $query = $query
+	->contain(['SubjectSearches'])
+	->matching('SubjectSearches')
+        ->where($where)
+	->bind(":search", $expr);
+
+      if (is_numeric($limit)) {
+	$query = $query->limit($limit);
+      }
+
+      return $query;
+    }
+
     public static $escapeForTest = false;
     // findByNameだとスペース区切りの違いで取得できない場合があるのでわざわざsearch()から取得する
     public function getOneWithSearch($str)
@@ -595,6 +619,25 @@ class SubjectsTable extends AppTable
       }
       return self::whereNoRecord();
     }
+
+    public function wherePrivacyNameExplicitly($name, $privacy_mode)
+    {
+      return [self::whereName($name), self::wherePrivacyExplicitly($privacy_mode)];
+    }
+    public function wherePrivacyExplicitly($privacy_mode)
+    {
+      if ($privacy_mode == \App\Controller\AppController::PRIVACY_PUBLIC) {
+	return self::wherePublic();
+      } elseif ($privacy_mode == \App\Controller\AppController::PRIVACY_PRIVATE) {
+	return self::wherePrivate($this->auth->user('id'));
+      } elseif ($privacy_mode == \App\Controller\AppController::PRIVACY_ALL) {
+	return self::whereAllPrivacy($this->auth->user('id'));
+      } elseif ($privacy_mode == \App\Controller\AppController::PRIVACY_ADMIN) {
+	return self::whereAllRecord();
+      }
+      return self::whereNoRecord();
+    }
+
 
     public static function whereId($id)
     {

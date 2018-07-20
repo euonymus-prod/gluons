@@ -165,7 +165,8 @@ class AppController extends Controller
 	  return $this->response;
 	}
 
-        $this->Auth->allow(['index', 'view', 'display', 'relations', 'search', 'listview', 'pickups', 'name']);
+        $this->Auth->allow(['index', 'view', 'display', 'relations', 'search', 'listview', 'pickups', 'name',
+			    'privateName', 'privateListview', 'privateSearch']);
 	// pass the auth information to view 
         $this->set('auth', $this->Auth);
     }

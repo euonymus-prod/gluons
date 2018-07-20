@@ -71,11 +71,15 @@ Router::scope('/', function (RouteBuilder $routes) {
     //$routes->connect('/quarks/*', ['controller' => 'Quark', 'action' => 'listview']);
     //$routes->connect('/pickups/*', ['controller' => 'Pickups', 'action' => 'view']);
     //$routes->connect('/search/*', ['controller' => 'Search', 'action' => 'index']);
-    $routes->connect('/quarks/list/*', ['controller' => 'Quark', 'action' => 'listview']);
+    $routes->connect('/quarks/list/*', ['controller' => 'Quarks', 'action' => 'listview']);
+    $routes->connect('/private_quarks/name/*', ['controller' => 'Quarks', 'action' => 'privateName']);
+    $routes->connect('/private_quarks/list/*', ['controller' => 'Quarks', 'action' => 'privateListview']);
+    $routes->connect('/private_quarks/search/*', ['controller' => 'Quarks', 'action' => 'privateSearch']);
 
     /* $routes->connect('/gluons/by_quark_property/\*', ['controller' => 'Gluons', 'action' => 'by_quark_property']); */
     /* $routes->connect('/gluons/\*', ['controller' => 'Gluons', 'action' => 'view']); */
     $routes->connect('/gluons/list/*', ['controller' => 'Gluons', 'action' => 'listview']);
+    $routes->connect('/private_gluons/list/*', ['controller' => 'Gluons', 'action' => 'privateListview']);
     /**************************************************************************/
 
     /**
