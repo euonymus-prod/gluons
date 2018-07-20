@@ -209,7 +209,6 @@ class GluonsController extends AppController
 	$this->set('_serialize', 'editedGluon');
     }
 
-    // !!MEMO:  This is not tested yet. 2018-07-08
     public function edit($id = null)
     {
 	$res = ['status' => 0, 'message' => 'Not accepted'];
@@ -217,7 +216,6 @@ class GluonsController extends AppController
         $relation = $Relations->findById($id);
         if ($this->request->is(['patch', 'post', 'put']) && ($relation->count() == 1)) {
             $relation = $Relations->patchEntity($relation->first(), $this->request->data);
-	    // TODO: なぜかwebからAPIコールするとsaveが失敗する。postmanだと成功する。
             if ($savedRelation = $Relations->save($relation)) {
 
 	      $Subjects = TableRegistry::get('Subjects');
