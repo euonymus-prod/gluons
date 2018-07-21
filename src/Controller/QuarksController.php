@@ -84,7 +84,7 @@ class QuarksController extends AppController
     }
 
     // API endpoint:  /quarks/list
-    public function listview($name = null)
+    public function listview()
     {
         $Subjects = TableRegistry::get('Subjects');
       
@@ -105,7 +105,7 @@ class QuarksController extends AppController
     }
 
     // API endpoint:  /private_quarks/list
-    public function privateListview($name = null, $privacy = 1)
+    public function privateListview($privacy = 1)
     {
         $Subjects = TableRegistry::get('Subjects');
       
