@@ -487,8 +487,10 @@ class SubjectsTable extends AppTable
     {
       $expr = self::bigramize($search_words);
 
-      $whereSearch = "MATCH(SubjectSearches.search_words) AGAINST(:search)";
-      $where = [$this->wherePrivacy(), $whereSearch];
+      //$whereSearch = "MATCH(SubjectSearches.search_words) AGAINST(:search)";
+      //$where = [$this->wherePrivacy(), $whereSearch];
+      //$where = [$this->wherePrivacy(), $whereSearch];
+      $where = "MATCH(SubjectSearches.search_words) AGAINST(:search)";
       $query = $this->find('all');
 
       if (self::$cachedRead) {
@@ -516,7 +518,8 @@ class SubjectsTable extends AppTable
       $query = $this->find('all');
 
       if (self::$cachedRead) {
-	$query = $query->cache('Subjects_' . $this->lang . '_' . $search_words . '_' . $limit);
+	$query = $query->cache('Subjects_' . $this->lang . '_' . $search_words . '_' . $privacy
+			       . '_' . $this->auth->user('id') . '_' . $limit);
       }
       $query = $query
 	->contain(['SubjectSearches'])
