@@ -62,8 +62,6 @@ class AppController extends Controller
     {
 	// Setting Language
 	$subdomain = U::getSubdomain();
-// TODO : postmanテストのために以下追加してある。あとで消す。
-$subdomain = 'ja';
 	if (in_array($subdomain, self::$langs)) {
 	  self::$lang = $subdomain;
 	}
