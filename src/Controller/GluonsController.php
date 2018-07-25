@@ -21,7 +21,7 @@ class GluonsController extends AppController
     public function isAuthorized($user)
     {
         //if (in_array($this->request->action, ['add', 'confirm'])) {
-        if (in_array($this->request->action, ['add', 'one', 'edit'])) {
+        if (in_array($this->request->action, ['add', 'one', 'edit', 'privateListview'])) {
             return true;
         }
 
@@ -52,6 +52,83 @@ class GluonsController extends AppController
       $limit = $this->request->getQuery('limit');
       if (!$limit) $limit = 100;
       $Relations = TableRegistry::get('Relations');
+
+      $gluonTypesByQuarkProperties = $Relations->constGluonTypesByQuarkProperties($quark_id, $quark_type_id);
+      $where = $Relations->whereByQpropertyGtypes($quark_id, $gluonTypesByQuarkProperties);
+      $query = $Relations->find()->where($where)->order(['Relations.start' => 'Desc'])
+	->contain(['Actives', 'Passives'])->limit($limit);
+
+      $gluons_by_property = [];
+      foreach($query as $key => $val) {
+
+	foreach($gluonTypesByQuarkProperties as $key => $gluonTypes) {
+	  $flg = false;
+	  foreach($gluonTypes as $key => $gluonType) {
+	    if ($gluonType->gluon_type_id != $val->gluon_type_id) {
+	      continue;
+	    }
+	    if ((($gluonType->sides == 1) && ($val->active_id == $quark_id)) ||
+		(($gluonType->sides == 2) && ($val->passive_id == $quark_id)) ||
+		($gluonType->sides == 0) ) {
+	      if (!array_key_exists($gluonType->quark_property_id, $gluons_by_property)) {
+		$gluons_by_property[$gluonType->quark_property_id] = [];
+	      }
+	      $gluons_by_property[$gluonType->quark_property_id][] = $val;
+	      $flg = true;
+	      break;
+	    }
+	  }
+	  if ($flg) {
+	    break;
+	  }
+	}
+      }
+
+      $where = $Relations->whereByNoQuarkProperty($quark_id, 'active');
+      $queryActives = $Relations->find()->where($where)->order(['Relations.start' => 'Desc'])
+		->contain(['Actives', 'Passives'])->limit($limit);
+      $gluons_by_property['active'] = $queryActives->all()->toArray();
+
+      $where = $Relations->whereByNoQuarkProperty($quark_id, 'passive');
+      $queryPassives = $Relations->find()->where($where)->order(['Relations.start' => 'Desc'])
+		->contain(['Actives', 'Passives'])->limit($limit);
+      $gluons_by_property['passive'] = $queryPassives->all()->toArray();
+
+      $count = 0;
+      $final_result = [];
+      foreach($gluons_by_property as $key => $val) {
+	$inner = [];
+	foreach($val as $k => $v) {
+	  $inner[$k] = $v;
+	  ++$count;
+	  if ($count >= $limit) {
+	    break;
+	  }
+	}
+	$final_result[$key] = $inner;
+	if ($count >= $limit) {
+	  break;
+	}
+      }
+
+      $this->set('articles', $final_result);
+      $this->set('_serialize', 'articles');
+    }
+
+    public function privateListview($quark_id = null, $quark_type_id = null, $privacy = 1)
+    {
+      if (($this->Auth->user('role') !== 'admin') && ($privacy == 4)) {
+	throw new NotFoundException(__('記事が見つかりません'));
+      }
+
+      // http://ja.localhost:8765/gluons/fa38c825-363d-4157-b972-fc8815f1f23c
+      // http://ja.localhost:8765/gluons/fa38c825-363d-4157-b972-fc8815f1f23c/2
+      $limit = $this->request->getQuery('limit');
+      if (!$limit) $limit = 100;
+      $Relations = TableRegistry::get('Relations');
+
+      $Relations->belongsToActives($privacy);
+      $Relations->belongsToPassives($privacy);
 
       $gluonTypesByQuarkProperties = $Relations->constGluonTypesByQuarkProperties($quark_id, $quark_type_id);
       $where = $Relations->whereByQpropertyGtypes($quark_id, $gluonTypesByQuarkProperties);

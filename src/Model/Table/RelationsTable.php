@@ -58,7 +58,7 @@ class RelationsTable extends AppTable
 	$this->belongsToPassives();
     }
 
-    public function belongsToActives()
+    public function belongsToActives($privacy = null)
     {
         $options = [
             'foreignKey' => 'active_id',
@@ -66,12 +66,17 @@ class RelationsTable extends AppTable
         ];
 
 	$Actives = TableRegistry::get('Actives');
-	$conditions = $Actives->wherePrivacy();
+	if (is_null($privacy)) {
+	    $conditions = $Actives->wherePrivacy();
+	} else {
+	  $conditions = $Actives->wherePrivacyExplicitly($privacy);
+	}
+
 	$options['conditions'] = $conditions;
 
         $this->belongsTo('Actives', $options);
     }
-    public function belongsToPassives()
+    public function belongsToPassives($privacy = null)
     {
         $options = [
             'foreignKey' => 'passive_id',
@@ -79,7 +84,11 @@ class RelationsTable extends AppTable
         ];
 
 	$Passives = TableRegistry::get('Passives');
-	$conditions = $Passives->wherePrivacy();
+	if (is_null($privacy)) {
+	    $conditions = $Passives->wherePrivacy();
+	} else {
+	  $conditions = $Passives->wherePrivacyExplicitly($privacy);
+	}
 	$options['conditions'] = $conditions;
 
         $this->belongsTo('Passives', $options);

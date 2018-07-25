@@ -62,6 +62,10 @@ class QuarksController extends AppController
 
     public function privateName($name = null, $privacy = 1)
     {
+      if (($this->Auth->user('role') !== 'admin') && ($privacy == 4)) {
+	throw new NotFoundException(__('記事が見つかりません'));
+      }
+
       $Subjects = TableRegistry::get('Subjects');
       
       $query = $Subjects->find()->where($Subjects->wherePrivacyNameExplicitly($name, $privacy));
@@ -107,6 +111,10 @@ class QuarksController extends AppController
     // API endpoint:  /private_quarks/list
     public function privateListview($privacy = 1)
     {
+        if (($this->Auth->user('role') !== 'admin') && ($privacy == 4)) {
+	  throw new NotFoundException(__('記事が見つかりません'));
+	}
+
         $Subjects = TableRegistry::get('Subjects');
       
         $options = [
@@ -284,6 +292,10 @@ class QuarksController extends AppController
 
     public function privateSearch($privacy = 1)
     {
+      if (($this->Auth->user('role') !== 'admin') && ($privacy == 4)) {
+	throw new NotFoundException(__('記事が見つかりません'));
+      }
+
       if (!array_key_exists('keywords', $this->request->query)) {
 	$subjects = [];
       } else {

@@ -113,6 +113,20 @@ class ActivesTable extends AppTable
       return self::whereNoRecord();
     }
 
+    public function wherePrivacyExplicitly($privacy_mode)
+    {
+      if ($privacy_mode == \App\Controller\AppController::PRIVACY_PUBLIC) {
+	return self::wherePublic();
+      } elseif ($privacy_mode == \App\Controller\AppController::PRIVACY_PRIVATE) {
+	return self::wherePrivate($this->auth->user('id'));
+      } elseif ($privacy_mode == \App\Controller\AppController::PRIVACY_ALL) {
+	return self::whereAllPrivacy($this->auth->user('id'));
+      } elseif ($privacy_mode == \App\Controller\AppController::PRIVACY_ADMIN) {
+	return self::whereAllRecord();
+      }
+      return self::whereNoRecord();
+    }
+
     public static function whereId($id)
     {
       return ['Actives.id' => $id];
