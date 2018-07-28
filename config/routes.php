@@ -61,8 +61,11 @@ Router::scope('/', function (RouteBuilder $routes) {
     // NOTE: preparation for OPTIONS method on preflight request
     $routes->options('/*', ['controller' => 'App', 'action' => 'dummy']);
 
-    //$routes->connect('/quark_properties/*', ['controller' => 'QuarkProperties', 'action' => 'index']);
     $routes->connect('/login', ['controller' => 'Users', 'action' => 'login']);
+    //$routes->post('/login', ['controller' => 'Users', 'action' => 'login'], 'users:login');
+    $routes->post('/signup', ['controller' => 'Users', 'action' => 'add'], 'users:add');
+
+    //$routes->connect('/quark_properties/*', ['controller' => 'QuarkProperties', 'action' => 'index']);
     $routes->connect('/quark_types/*', ['controller' => 'QuarkTypes', 'action' => 'index']);
     $routes->connect('/gluon_types/*', ['controller' => 'GluonTypes', 'action' => 'index']);
     $routes->connect('/qtype_properties/*', ['controller' => 'QtypeProperties', 'action' => 'index']);

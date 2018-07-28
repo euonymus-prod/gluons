@@ -14,7 +14,8 @@ class UsersController extends AppController
 {
     public function isAuthorized($user)
     {
-        if (in_array($this->request->action, ['logout', 'privacy'])) {
+        //if (in_array($this->request->action, ['logout', 'privacy'])) {
+        if (in_array($this->request->action, ['logout'])) {
             return true;
         }
 
@@ -34,25 +35,25 @@ class UsersController extends AppController
         $this->Auth->allow('add', 'logout');
     }
 
-    public function privacy($mode = 1)
-    {
-      if (!in_array($mode,
-		    [\App\Controller\AppController::PRIVACY_PUBLIC,
-		     \App\Controller\AppController::PRIVACY_PRIVATE,
-		     \App\Controller\AppController::PRIVACY_ALL,
-		     \App\Controller\AppController::PRIVACY_ADMIN])) {
-	$mode = \App\Controller\AppController::PRIVACY_PUBLIC;
-      }
+    /* public function privacy($mode = 1) */
+    /* { */
+    /*   if (!in_array($mode, */
+    /* 		    [\App\Controller\AppController::PRIVACY_PUBLIC, */
+    /* 		     \App\Controller\AppController::PRIVACY_PRIVATE, */
+    /* 		     \App\Controller\AppController::PRIVACY_ALL, */
+    /* 		     \App\Controller\AppController::PRIVACY_ADMIN])) { */
+    /* 	$mode = \App\Controller\AppController::PRIVACY_PUBLIC; */
+    /*   } */
 
-      if (($this->Auth->user('role') != 'admin') && ($mode == \App\Controller\AppController::PRIVACY_ADMIN)) {
-	$mode = \App\Controller\AppController::PRIVACY_ALL;
-      }
-      Cache::clear(false); 
+    /*   if (($this->Auth->user('role') != 'admin') && ($mode == \App\Controller\AppController::PRIVACY_ADMIN)) { */
+    /* 	$mode = \App\Controller\AppController::PRIVACY_ALL; */
+    /*   } */
+    /*   Cache::clear(false);  */
 
-      $this->Session->write('PrivacyMode', $mode);
-      $url = $this->referer(null, true);
-      return $this->redirect($url);
-    }
+    /*   $this->Session->write('PrivacyMode', $mode); */
+    /*   $url = $this->referer(null, true); */
+    /*   return $this->redirect($url); */
+    /* } */
 
     public function login()
     {
@@ -100,12 +101,17 @@ class UsersController extends AppController
      */
     public function add()
     {
+	$res = ['status' => 0];
         $user = $this->Users->newEntity();
 	$res = [];
         if ($this->request->is('post')) {
             $user = $this->Users->patchEntity($user, $this->request->data);
-            if ($this->Users->save($user)) {
-	      $res = $user;
+            if ($saved = $this->Users->save($user)) {
+	      $res = $saved;
+	      $res['status'] = 1;
+	      $res['role'] = 'author';
+	      $res['default_saving_privacy'] = false;
+	      $res['default_showing_privacy'] = 3;
 	      $res['message'] = 'The user has been saved.';
             } else {
 	      $res['message'] = 'The user could not be saved. Please, try again.';
