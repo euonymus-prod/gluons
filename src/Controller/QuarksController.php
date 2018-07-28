@@ -19,8 +19,8 @@ class QuarksController extends AppController
 {
     public function isAuthorized($user)
     {
-        if (in_array($this->request->action, ['name', 'one', 'listview', 'search', 'add', 'edit', 'pickups',
-					      'privateName', 'privateListview', 'privateSearch'])) {
+        if (in_array($this->request->action, ['name', 'one', 'listview', 'add', 'edit',
+					      'privateName', 'privateListview'])) {
             return true;
         }
 
@@ -43,7 +43,6 @@ class QuarksController extends AppController
       $this->response->type('application/json');
       $this->response->header("Access-Control-Allow-Origin: *");
     }
-
 
     // API endpoint:  /quark/:name
     public function name($name = null)
@@ -90,22 +89,15 @@ class QuarksController extends AppController
     // API endpoint:  /quarks/list
     public function listview()
     {
-        $Subjects = TableRegistry::get('Subjects');
-      
-        $options = [
-            'conditions' => [$Subjects->wherePrivacy()]
-        ];
-	$order = false;
-        if (!isset($this->request->query['type']) || $this->request->query['type'] != 0) {
-	  $options['order'] = ['Subjects.created' => 'desc'];
-	  $order = true;
-        }
-        $this->paginate = $options;
-
-        $query = $this->paginate($Subjects);
-
-	$this->set('subjects', $query);
-	$this->set('_serialize', 'subjects');
+	if (array_key_exists('is_pickup', $this->request->query)) {
+	  $results = $this->_pickups();
+	} elseif (array_key_exists('keywords', $this->request->query)) {
+	  $results = $this->_search();
+	} else {
+	  $results = $this->_list();
+	}
+	$this->set('results', $results);
+	$this->set('_serialize', 'results');
     }
 
     // API endpoint:  /private_quarks/list
@@ -115,6 +107,17 @@ class QuarksController extends AppController
 	  throw new NotFoundException(__('記事が見つかりません'));
 	}
 
+	if (array_key_exists('keywords', $this->request->query)) {
+	  $results = $this->_search($privacy);
+	} else {
+	  $results = $this->_list($privacy);
+	}
+	$this->set('results', $results);
+	$this->set('_serialize', 'results');
+    }
+
+    public function _list($privacy = 1)
+    {
         $Subjects = TableRegistry::get('Subjects');
       
         $options = [
@@ -127,10 +130,7 @@ class QuarksController extends AppController
         }
         $this->paginate = $options;
 
-        $query = $this->paginate($Subjects);
-
-	$this->set('subjects', $query);
-	$this->set('_serialize', 'subjects');
+        return $this->paginate($Subjects);
     }
 
     public function add()
@@ -165,12 +165,13 @@ class QuarksController extends AppController
 	$this->set('_serialize', 'newQuark');
     }
 
+    // This accept only PATCH method
     public function edit($id = null)
     {
 	$res = ['status' => 0, 'message' => 'Not accepted'];
         $Subjects = TableRegistry::get('Subjects');
         $subject = $Subjects->findById($id);
-        if ($this->request->is(['patch', 'post', 'put']) && ($subject->count() == 1)) {
+        if ($this->request->is(['patch']) && ($subject->count() == 1)) {
             $subject = $Subjects->formToEditing($subject->first(), $this->request->data);
 
             $subject->last_modified_user = $this->Auth->user('id');
@@ -208,7 +209,7 @@ class QuarksController extends AppController
     }
 
 
-    public function pickups($name = null)
+    public function _pickups()
     {
       $lang_now = AppController::$lang;
       $lang_eng = AppController::LANG_ENG;
@@ -265,52 +266,28 @@ class QuarksController extends AppController
 
       $Subjects = TableRegistry::get('Subjects');
       $pickups = $Subjects->find('all', ['conditions' => ['Subjects.id in' => array_keys($pickup_ids)]])->limit(8);
-      $pickups = self::_pickupsOrder($pickups, $pickup_ids);
+      return self::_pickupsOrder($pickups, $pickup_ids);
 
-      $this->set('pickups', $pickups);
-      $this->set('_serialize', 'pickups');
+      /* $this->set('pickups', $pickups); */
+      /* $this->set('_serialize', 'pickups'); */
     }
 
-    public function search()
+    public function _search($privacy = 1)
     {
       if (!array_key_exists('keywords', $this->request->query)) {
-	$subjects = [];
+	return [];
+      }
+
+      if (!array_key_exists('limit', $this->request->query)) {
+	$limit = 20;
       } else {
-	if (!array_key_exists('limit', $this->request->query)) {
-	  $limit = 20;
-	} else {
-	  $limit = $this->request->query['limit'];
-	}
-	\App\Model\Table\SubjectsTable::$cachedRead = true;
-	$Subjects = TableRegistry::get('Subjects');
-	$queary = $Subjects->searchForApi($this->request->query['keywords'], $limit);
+	$limit = $this->request->query['limit'];
       }
-
-      $this->set('subjects', $this->paginate($queary));
-      $this->set('_serialize', 'subjects');
-    }
-
-    public function privateSearch($privacy = 1)
-    {
-      if (($this->Auth->user('role') !== 'admin') && ($privacy == 4)) {
-	throw new NotFoundException(__('記事が見つかりません'));
-      }
-
-      if (!array_key_exists('keywords', $this->request->query)) {
-	$subjects = [];
-      } else {
-	if (!array_key_exists('limit', $this->request->query)) {
-	  $limit = 20;
-	} else {
-	  $limit = $this->request->query['limit'];
-	}
-	\App\Model\Table\SubjectsTable::$cachedRead = true;
-	$Subjects = TableRegistry::get('Subjects');
-	$queary = $Subjects->searchForApiPrivacy($this->request->query['keywords'], $privacy, $limit);
-      }
-
-      $this->set('subjects', $this->paginate($queary));
-      $this->set('_serialize', 'subjects');
+      \App\Model\Table\SubjectsTable::$cachedRead = true;
+      $Subjects = TableRegistry::get('Subjects');
+      //$query = $Subjects->searchForApi($this->request->query['keywords'], $limit);
+      $query = $Subjects->searchForApiPrivacy($this->request->query['keywords'], $privacy, $limit);
+      return $this->paginate($query);
     }
 
     public static function _pickupsOrder($pickups, $indicator)

@@ -58,7 +58,11 @@ Router::scope('/', function (RouteBuilder $routes) {
 
     
     /**************************************************************************/
+    // NOTE: preparation for OPTIONS method on preflight request
+    $routes->options('/*', ['controller' => 'App', 'action' => 'dummy']);
+
     //$routes->connect('/quark_properties/*', ['controller' => 'QuarkProperties', 'action' => 'index']);
+    $routes->connect('/login', ['controller' => 'Users', 'action' => 'login']);
     $routes->connect('/quark_types/*', ['controller' => 'QuarkTypes', 'action' => 'index']);
     $routes->connect('/gluon_types/*', ['controller' => 'GluonTypes', 'action' => 'index']);
     $routes->connect('/qtype_properties/*', ['controller' => 'QtypeProperties', 'action' => 'index']);
@@ -71,15 +75,28 @@ Router::scope('/', function (RouteBuilder $routes) {
     //$routes->connect('/quarks/*', ['controller' => 'Quark', 'action' => 'listview']);
     //$routes->connect('/pickups/*', ['controller' => 'Pickups', 'action' => 'view']);
     //$routes->connect('/search/*', ['controller' => 'Search', 'action' => 'index']);
-    $routes->connect('/quarks/list/*', ['controller' => 'Quarks', 'action' => 'listview']);
+    //$routes->connect('/quarks/list/*', ['controller' => 'Quarks', 'action' => 'listview']);
+    //$routes->connect('/private_quarks/list/*', ['controller' => 'Quarks', 'action' => 'privateListview']);
+    //$routes->connect('/private_quarks/search/*', ['controller' => 'Quarks', 'action' => 'privateSearch']);
+    $routes->get('/quarks/:id', ['controller' => 'Quarks', 'action' => 'one'], 'quarks:one')->setPass(['id']);
+    $routes->get('/quarks', ['controller' => 'Quarks', 'action' => 'listview'], 'quarks:listview');
+    $routes->post('/quarks', ['controller' => 'Quarks', 'action' => 'add'], 'quarks:add');
+    $routes->patch('/quarks/:id', ['controller' => 'Quarks', 'action' => 'edit'], 'quarks:edit')->setPass(['id']);
+    $routes->delete('/quarks/:id', ['controller' => 'Quarks', 'action' => 'delete'], 'quarks:delete')->setPass(['id']);
+    $routes->get('/private_quarks/:privacy', ['controller' => 'Quarks', 'action' => 'privateListview'])->setPass(['privacy']);
     $routes->connect('/private_quarks/name/*', ['controller' => 'Quarks', 'action' => 'privateName']);
-    $routes->connect('/private_quarks/list/*', ['controller' => 'Quarks', 'action' => 'privateListview']);
-    $routes->connect('/private_quarks/search/*', ['controller' => 'Quarks', 'action' => 'privateSearch']);
 
-    /* $routes->connect('/gluons/by_quark_property/\*', ['controller' => 'Gluons', 'action' => 'by_quark_property']); */
-    /* $routes->connect('/gluons/\*', ['controller' => 'Gluons', 'action' => 'view']); */
-    $routes->connect('/gluons/list/*', ['controller' => 'Gluons', 'action' => 'listview']);
-    $routes->connect('/private_gluons/list/*', ['controller' => 'Gluons', 'action' => 'privateListview']);
+    //$routes->connect('/gluons/by_quark_property/*', ['controller' => 'Gluons', 'action' => 'by_quark_property']);
+    //$routes->connect('/gluons/*', ['controller' => 'Gluons', 'action' => 'view']);
+    //$routes->connect('/gluons/list/*', ['controller' => 'Gluons', 'action' => 'listview']);
+    $routes->get('/gluons/:quark_id/:quark_type_id', ['controller' => 'Gluons', 'action' => 'listview'])
+      ->setPass(['quark_id', 'quark_type_id']);
+    $routes->post('/gluons/:quark_id', ['controller' => 'Gluons', 'action' => 'add'], 'gluons:add')->setPass(['quark_id']);
+    $routes->get('/gluons/:id', ['controller' => 'Gluons', 'action' => 'one'], 'gluons:one')->setPass(['id']);
+    $routes->patch('/gluons/:id', ['controller' => 'Gluons', 'action' => 'edit'], 'gluons:edit')->setPass(['id']);
+    $routes->delete('/gluons/:id', ['controller' => 'Gluons', 'action' => 'delete'], 'gluons:delete')->setPass(['id']);
+    $routes->get('/private_gluons/:quark_id/:quark_type_id/:privacy', ['controller' => 'Gluons', 'action' => 'privateListview'])
+      ->setPass(['quark_id', 'quark_type_id', 'privacy']);
     /**************************************************************************/
 
     /**

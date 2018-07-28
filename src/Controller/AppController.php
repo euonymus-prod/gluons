@@ -215,4 +215,13 @@ class AppController extends Controller
     {
 	$this->Flash->set($string, ['params' => ['class' => 'alert alert-'. ($error ? 'danger' : 'success')]]); 
     }
+
+
+    // action for OPTIONS method for preflight
+    public function dummy()
+    {
+      $this->set('articles', ['OK']);
+      $this->set('_serialize', 'articles');
+    }
+
 }
