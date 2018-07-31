@@ -96,8 +96,10 @@ class QuarksController extends AppController
 	} else {
 	  $results = $this->_list();
 	}
-	$this->set('results', $results);
-	$this->set('_serialize', 'results');
+	$this->set(compact('results'));
+	//$this->set('_serialize', 'results');
+	$this->set('_serialize', false);
+	$this->render('list');
     }
 
     // API endpoint:  /private_quarks/list
@@ -112,8 +114,10 @@ class QuarksController extends AppController
 	} else {
 	  $results = $this->_list($privacy);
 	}
-	$this->set('results', $results);
-	$this->set('_serialize', 'results');
+	$this->set(compact('results'));
+	//$this->set('_serialize', 'results');
+	$this->set('_serialize', false);
+	$this->render('list');
     }
 
     public function add()
