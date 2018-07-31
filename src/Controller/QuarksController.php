@@ -116,23 +116,6 @@ class QuarksController extends AppController
 	$this->set('_serialize', 'results');
     }
 
-    public function _list($privacy = 1)
-    {
-        $Subjects = TableRegistry::get('Subjects');
-      
-        $options = [
-            'conditions' => [$Subjects->wherePrivacyExplicitly($privacy)]
-        ];
-	$order = false;
-        if (!isset($this->request->query['type']) || $this->request->query['type'] != 0) {
-	  $options['order'] = ['Subjects.created' => 'desc'];
-	  $order = true;
-        }
-        $this->paginate = $options;
-
-        return $this->paginate($Subjects);
-    }
-
     public function add()
     {
 	$res = ['status' => 0, 'message' => 'Not accepted'];
@@ -208,6 +191,54 @@ class QuarksController extends AppController
 	$this->set('_serialize', 'deleted');
     }
 
+    public function _list($privacy = 1)
+    {
+        $Subjects = TableRegistry::get('Subjects');
+      
+        $options = [
+            'conditions' => [$Subjects->wherePrivacyExplicitly($privacy)]
+        ];
+	$order = false;
+        if (!isset($this->request->query['type']) || $this->request->query['type'] != 0) {
+	  $options['order'] = ['Subjects.created' => 'desc'];
+	  $order = true;
+        }
+        $this->paginate = $options;
+
+        return $this->paginate($Subjects);
+    }
+
+    public function _search($privacy = 1)
+    {
+      if (!array_key_exists('keywords', $this->request->query)) {
+	return [];
+      }
+
+      if (!array_key_exists('limit', $this->request->query)) {
+	$limit = 20;
+      } else {
+	$limit = $this->request->query['limit'];
+      }
+      \App\Model\Table\SubjectsTable::$cachedRead = true;
+      $Subjects = TableRegistry::get('Subjects');
+      //$query = $Subjects->searchForApi($this->request->query['keywords'], $limit);
+      $query = $Subjects->searchForApiPrivacy($this->request->query['keywords'], $privacy, $limit);
+      return $this->paginate($query);
+    }
+
+    public static function _pickupsOrder($pickups, $indicator)
+    {
+      $res = [];
+      foreach($indicator as $key => $type) {
+	foreach($pickups as $pickup) {
+	  if ($key == $pickup->id) {
+	    $pickup->type = $type;
+	    $res[] = $pickup;
+	  }
+	}
+      }
+      return $res;
+    }
 
     public function _pickups()
     {
@@ -272,35 +303,4 @@ class QuarksController extends AppController
       /* $this->set('_serialize', 'pickups'); */
     }
 
-    public function _search($privacy = 1)
-    {
-      if (!array_key_exists('keywords', $this->request->query)) {
-	return [];
-      }
-
-      if (!array_key_exists('limit', $this->request->query)) {
-	$limit = 20;
-      } else {
-	$limit = $this->request->query['limit'];
-      }
-      \App\Model\Table\SubjectsTable::$cachedRead = true;
-      $Subjects = TableRegistry::get('Subjects');
-      //$query = $Subjects->searchForApi($this->request->query['keywords'], $limit);
-      $query = $Subjects->searchForApiPrivacy($this->request->query['keywords'], $privacy, $limit);
-      return $this->paginate($query);
-    }
-
-    public static function _pickupsOrder($pickups, $indicator)
-    {
-      $res = [];
-      foreach($indicator as $key => $type) {
-	foreach($pickups as $pickup) {
-	  if ($key == $pickup->id) {
-	    $pickup->type = $type;
-	    $res[] = $pickup;
-	  }
-	}
-      }
-      return $res;
-    }
 }
