@@ -1057,6 +1057,16 @@ class Initial extends AbstractMigration
                 'null' => false,
                 'signed' => false,
             ])
+            ->addColumn('api_key_plain', 'string', [
+                'default' => null,
+                'limit' => 255,
+                'null' => true,
+            ])
+            ->addColumn('api_key', 'string', [
+                'default' => null,
+                'limit' => 255,
+                'null' => true,
+            ])
             ->addColumn('created', 'datetime', [
                 'default' => null,
                 'limit' => null,
