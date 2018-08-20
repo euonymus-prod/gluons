@@ -621,6 +621,13 @@ class Initial extends AbstractMigration
                 'limit' => null,
                 'null' => true,
             ])
+            ->addIndex(
+                [
+                    'quark_type_id',
+                    'quark_property_id',
+                ],
+                ['unique' => true]
+            )
             ->create();
 
         $this->table('quark_properties')
