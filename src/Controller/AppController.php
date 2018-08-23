@@ -61,7 +61,7 @@ class AppController extends Controller
     public function initialize()
     {
 	// Setting Language
-	$subdomain = U::getSubdomain();
+	$subdomain = U::getFirstSubdomain();
 	if (in_array($subdomain, self::$langs)) {
 	  self::$lang = $subdomain;
 	}

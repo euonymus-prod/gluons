@@ -884,4 +884,11 @@ class U
     return $ret;
   }
 
+  public static function getFirstSubdomain()
+  {
+    $subdomain = self::getSubdomain();
+    $exploded = explode('.', $subdomain);
+    return $exploded[0];
+  }
+
 }
