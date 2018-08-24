@@ -72,6 +72,21 @@ class GluonsController extends AppController
       $query = $Relations->find()->where($where)->order(['Relations.start' => 'Desc'])
 	->contain(['Actives', 'Passives'])->limit($limit);
 
+      // build cache slag
+      if ($privacy === self::PRIVACY_PUBLIC) {
+	$privacy_slag = '';
+      } else {
+	$privacy_slag = $this->Auth->user('id') . $privacy;
+      }
+      if (array_key_exists('page', $this->request->query)) {
+	$page_slag = $this->request->query['page'];
+      } else {
+	$page_slag = '';
+      }
+
+      // cache the query
+      $query = $query->cache('gluons_' . $this->lang . $privacy_slag . $quark_id . $limit . $page_slag);
+
       $gluons_by_property = [];
       foreach($query as $key => $val) {
 
@@ -101,11 +116,14 @@ class GluonsController extends AppController
       $where = $Relations->whereByNoQuarkProperty($quark_id, 'active');
       $queryActives = $Relations->find()->where($where)->order(['Relations.start' => 'Desc'])
 		->contain(['Actives', 'Passives'])->limit($limit);
+      // cache the query
+      $queryActives = $queryActives->cache('gluonsactive_' . $this->lang . $privacy_slag . $quark_id . $limit . $page_slag);
       $gluons_by_property['active'] = $queryActives->all()->toArray();
 
       $where = $Relations->whereByNoQuarkProperty($quark_id, 'passive');
       $queryPassives = $Relations->find()->where($where)->order(['Relations.start' => 'Desc'])
 		->contain(['Actives', 'Passives'])->limit($limit);
+      $queryPassives = $queryPassives->cache('gluonspassive_' . $this->lang . $privacy_slag . $quark_id . $limit . $page_slag);
       $gluons_by_property['passive'] = $queryPassives->all()->toArray();
 
       $count = 0;
@@ -177,6 +195,7 @@ class GluonsController extends AppController
 
             if ($savedSubject = $Subjects->save($subject)) {
 	      $passive_id = $savedSubject->id;
+	      Cache::clear(false);
             } else {
 	      $res['message'] = 'The quark to glue could not be saved. Please, try again.';
 	      $res['result'] = $savedSubject;
@@ -197,6 +216,7 @@ class GluonsController extends AppController
 	      $res['status'] = 1;
 	      $res['message'] = 'The gluon has been saved.';
 	      $res['result'] = $savedRelation;
+	      Cache::clear(false);
             } else {
 	      $res['message'] = 'The gluon could not be saved. Please, try again.';
 	      $res['result'] = $savedRelation;
@@ -239,6 +259,7 @@ class GluonsController extends AppController
 	      $res['status'] = 1;
 	      $res['message'] = 'The gluon has been saved.';
 	      $res['result'] = $savedRelation;
+	      Cache::clear(false);
             } else {
 	      $res['message'] = 'The gluon could not be saved. Please, try again.';
 	      $res['result'] = $savedRelation;
@@ -260,6 +281,7 @@ class GluonsController extends AppController
         if ($Relations->delete($relation)) {
 	    $res['status'] = 1;
 	    $res['message'] = 'The gluon has been deleted.';
+	    Cache::clear(false);
         } else {
 	    $res['message'] = 'The gluon could not be deleted. Please, try again.';
         }

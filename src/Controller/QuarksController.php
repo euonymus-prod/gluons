@@ -142,6 +142,7 @@ class QuarksController extends AppController
 	      $res['status'] = 1;
 	      $res['message'] = 'The quark has been saved.';
 	      $res['result'] = $savedSubject;
+	      Cache::clear(false);
 	    } else {
 	      $res['message'] = 'The quark could not be saved. Please, try again.';
 	      $res['result'] = $savedSubject;
@@ -166,6 +167,7 @@ class QuarksController extends AppController
 	      $res['status'] = 1;
 	      $res['message'] = 'The quark has been saved.';
 	      $res['result'] = $savedSubject;
+	      Cache::clear(false);
 	    } else {
 	      $res['message'] = 'The quark could not be saved. Please, try again.';
 	      $res['result'] = $savedSubject;
@@ -188,6 +190,7 @@ class QuarksController extends AppController
         if ($Subjects->delete($subject)) {
 	    $res['status'] = 1;
 	    $res['message'] = 'The quark has been deleted.';
+	    Cache::clear(false);
         } else {
 	    $res['message'] = 'The quark could not be deleted. Please, try again.';
         }
