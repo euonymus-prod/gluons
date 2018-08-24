@@ -206,13 +206,36 @@ class QuarksController extends AppController
             'conditions' => [$Subjects->wherePrivacyExplicitly($privacy)]
         ];
 	$order = false;
+	$order_slag = '';
         if (!isset($this->request->query['type']) || $this->request->query['type'] != 0) {
 	  $options['order'] = ['Subjects.created' => 'desc'];
 	  $order = true;
+	  $order_slag = 'created_desc';
         }
         $this->paginate = $options;
 
-        return $this->paginate($Subjects);
+	//return $this->paginate($Subjects);
+
+        // build cache slag
+	if ($privacy === self::PRIVACY_PUBLIC) {
+	  $privacy_slag = '';
+	} else {
+	  $privacy_slag = $this->Auth->user('id') . $privacy;
+	}
+	if (array_key_exists('page', $this->request->query)) {
+	  $page_slag = $this->request->query['page'];
+	} else {
+	  $page_slag = '';
+	}
+	$limit = ''; // for the future
+
+	// cache the query
+	$cache_slag = 'quarks_' . self::$lang . $privacy_slag . $order_slag . $limit . $page_slag;
+	if (($results = Cache::read($cache_slag, 'day')) === false) {
+	  $results = $this->paginate($Subjects);
+	  Cache::write($cache_slag, $results, 'day');
+	}
+	return $results;
     }
 
     public function _search($privacy = 1)
