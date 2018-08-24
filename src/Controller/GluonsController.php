@@ -85,7 +85,7 @@ class GluonsController extends AppController
       }
 
       // cache the query
-      $query = $query->cache('gluons_' . $this->lang . $privacy_slag . $quark_id . $limit . $page_slag);
+      $query = $query->cache('gluons_' . self::$lang . $privacy_slag . $quark_id . $limit . $page_slag);
 
       $gluons_by_property = [];
       foreach($query as $key => $val) {
@@ -117,13 +117,13 @@ class GluonsController extends AppController
       $queryActives = $Relations->find()->where($where)->order(['Relations.start' => 'Desc'])
 		->contain(['Actives', 'Passives'])->limit($limit);
       // cache the query
-      $queryActives = $queryActives->cache('gluonsactive_' . $this->lang . $privacy_slag . $quark_id . $limit . $page_slag);
+      $queryActives = $queryActives->cache('gluonsactive_' . self::$lang . $privacy_slag . $quark_id . $limit . $page_slag);
       $gluons_by_property['active'] = $queryActives->all()->toArray();
 
       $where = $Relations->whereByNoQuarkProperty($quark_id, 'passive');
       $queryPassives = $Relations->find()->where($where)->order(['Relations.start' => 'Desc'])
 		->contain(['Actives', 'Passives'])->limit($limit);
-      $queryPassives = $queryPassives->cache('gluonspassive_' . $this->lang . $privacy_slag . $quark_id . $limit . $page_slag);
+      $queryPassives = $queryPassives->cache('gluonspassive_' . self::$lang . $privacy_slag . $quark_id . $limit . $page_slag);
       $gluons_by_property['passive'] = $queryPassives->all()->toArray();
 
       $count = 0;
