@@ -80,7 +80,7 @@ class AppController extends Controller
 	    $subDomain = $lang_now . '.';
 	  }
 	  $sanitizeRedirect = 'https://' . $subDomain . self::DOMAIN_PROD . Router::url();
-	  $this->redirect($sanitizeRedirect);
+	  //$this->redirect($sanitizeRedirect);
 	}
 
 	// Start ====================================================
