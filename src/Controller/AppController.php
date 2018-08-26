@@ -35,7 +35,7 @@ class AppController extends Controller
 {
     public $helpers = ['LangMngr'];
 
-    const DOMAIN_PROD = 'gluons.link';
+    const DOMAIN_PROD = 'api.gluons.link';
     const LANG_ENG = 'en';
     const LANG_JPY = 'ja';
     static $langs = [
@@ -80,8 +80,7 @@ class AppController extends Controller
 	    $subDomain = $lang_now . '.';
 	  }
 	  $sanitizeRedirect = 'https://' . $subDomain . self::DOMAIN_PROD . Router::url();
-	  // TODO: commented out for the test. It has to be reactivated
-	  //$this->redirect($sanitizeRedirect);
+	  $this->redirect($sanitizeRedirect);
 	}
 
 	// Start ====================================================
