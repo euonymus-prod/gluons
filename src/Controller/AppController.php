@@ -202,7 +202,7 @@ class AppController extends Controller
       //Access-Control-Allow-Headers
       //Access-Control-Allow-Methods
       $this->response->cors($this->request)
-        ->allowOrigin(['*.gluons.link'])
+        ->allowOrigin(['gluons.link', '*.gluons.link'])
         ->allowMethods(['GET,PUT,POST,DELETE,PATCH,OPTIONS'])
         ->allowHeaders(['x-xsrf-token', 'Origin', 'Content-Type', 'X-Auth-Token', 'Authorization'])
         ->allowCredentials(['true'])
