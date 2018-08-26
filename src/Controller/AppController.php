@@ -35,7 +35,7 @@ class AppController extends Controller
 {
     public $helpers = ['LangMngr'];
 
-    const DOMAIN_PROD = 'api.gluons.link';
+    const DOMAIN_PROD = 'gluons.link';
     const LANG_ENG = 'en';
     const LANG_JPY = 'ja';
     static $langs = [
@@ -79,8 +79,8 @@ class AppController extends Controller
 	  if ($lang_now != $lang_eng) {
 	    $subDomain = $lang_now . '.';
 	  }
-	  $sanitizeRedirect = 'https://' . $subDomain . self::DOMAIN_PROD . Router::url();
-	  //$this->redirect($sanitizeRedirect);
+	  $sanitizeRedirect = 'https://' . $subDomain . 'api.' . self::DOMAIN_PROD . Router::url();
+	  $this->redirect($sanitizeRedirect);
 	}
 
 	// Start ====================================================
