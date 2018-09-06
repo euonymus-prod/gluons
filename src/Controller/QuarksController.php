@@ -202,17 +202,15 @@ class QuarksController extends AppController
     {
         $Subjects = TableRegistry::get('Subjects');
       
-        $options = [
-            'conditions' => [$Subjects->wherePrivacyExplicitly($privacy)]
-        ];
-	$order = false;
+        $where = [$Subjects->wherePrivacyExplicitly($privacy)];
+
 	$order_slag = '';
         if (!isset($this->request->query['type']) || $this->request->query['type'] != 0) {
-	  $options['order'] = ['Subjects.created' => 'desc'];
-	  $order = true;
+	  $order = ['Subjects.created' => 'desc'];
 	  $order_slag = 'created_desc';
         }
-        $this->paginate = $options;
+
+        //$this->paginate = $options;
 
 	//return $this->paginate($Subjects);
 
@@ -231,11 +229,16 @@ class QuarksController extends AppController
 
 	// cache the query
 	$cache_slag = 'quarks_' . self::$lang . $privacy_slag . $order_slag . $limit . $page_slag;
-	if (($results = Cache::read($cache_slag, 'day')) === false) {
-	  $results = $this->paginate($Subjects);
-	  Cache::write($cache_slag, $results, 'day');
-	}
-	return $results;
+
+	// generate query
+	$query = $Subjects->find()->where($where)->order($order)->cache($cache_slag);
+	return $this->paginate($query);
+
+	/* if (($results = Cache::read($cache_slag, 'day')) === false) { */
+	/*   $results = $this->paginate($Subjects); */
+	/*   Cache::write($cache_slag, $results, 'day'); */
+	/* } */
+	/* return $results; */
     }
 
     public function _search($privacy = 1)
@@ -243,16 +246,34 @@ class QuarksController extends AppController
       if (!array_key_exists('keywords', $this->request->query)) {
 	return [];
       }
+      $search_words = $this->request->query['keywords'];
 
       if (!array_key_exists('limit', $this->request->query)) {
 	$limit = 20;
       } else {
 	$limit = $this->request->query['limit'];
       }
-      \App\Model\Table\SubjectsTable::$cachedRead = true;
       $Subjects = TableRegistry::get('Subjects');
       //$query = $Subjects->searchForApi($this->request->query['keywords'], $limit);
-      $query = $Subjects->searchForApiPrivacy($this->request->query['keywords'], $privacy, $limit);
+      $query = $Subjects->searchForApiPrivacy($search_words, $privacy, $limit);
+
+      // build cache slag
+      if ($privacy === self::PRIVACY_PUBLIC) {
+	$privacy_slag = '';
+      } else {
+	$privacy_slag = $this->Auth->user('id') . $privacy;
+      }
+      if (array_key_exists('page', $this->request->query)) {
+	$page_slag = $this->request->query['page'];
+      } else {
+	$page_slag = '';
+      }
+      $limit = ''; // for the future
+
+      $cache_slag = 'quark_search_' . $this->lang . $search_words . $privacy_slag . $limit . $page_slag;
+
+      $query->cache($cache_slag);
+
       return $this->paginate($query);
     }
 

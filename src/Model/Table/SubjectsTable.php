@@ -517,10 +517,6 @@ class SubjectsTable extends AppTable
       $where = [$this->wherePrivacyExplicitly($privacy), $whereSearch];
       $query = $this->find('all');
 
-      if (self::$cachedRead) {
-	$query = $query->cache('Subjects_' . $this->lang . '_' . $search_words . '_' . $privacy
-			       . '_' . $this->auth->user('id') . '_' . $limit);
-      }
       $query = $query
 	->contain(['SubjectSearches'])
 	->matching('SubjectSearches')
@@ -530,7 +526,6 @@ class SubjectsTable extends AppTable
       if (is_numeric($limit)) {
 	$query = $query->limit($limit);
       }
-
       return $query;
     }
 
