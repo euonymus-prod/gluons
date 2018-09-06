@@ -201,8 +201,16 @@ class AppController extends Controller
       //Access-Control-Allow-Origin
       //Access-Control-Allow-Headers
       //Access-Control-Allow-Methods
+
+      $host = Configure::read('Belongsto.host');
+      if (($host == 'production') && ($this->request->domain() != self::DOMAIN_PROD)) {
+	$allowOrigin = ['gluons.link', '*.gluons.link'];
+      } else {
+	$allowOrigin = ['*'];
+      }
+
       $this->response->cors($this->request)
-        ->allowOrigin(['gluons.link', '*.gluons.link'])
+        ->allowOrigin($allowOrigin)
         ->allowMethods(['GET,PUT,POST,DELETE,PATCH,OPTIONS'])
         ->allowHeaders(['x-xsrf-token', 'Origin', 'Content-Type', 'X-Auth-Token', 'Authorization'])
         ->allowCredentials(['true'])
