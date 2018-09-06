@@ -24,6 +24,7 @@ class QtypePropertiesController extends AppController
     {
       $QtypeProperties = TableRegistry::get('QtypeProperties');
       $query = $QtypeProperties->find()->contain(['QuarkProperties']);
+      $query = $query->cache('qtype_properties_' . self::$lang);
 
       $map = [];
       foreach($query as $key => $val) {
