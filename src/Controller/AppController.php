@@ -79,9 +79,8 @@ class AppController extends Controller
 	  if ($lang_now != $lang_eng) {
 	    $subDomain = $lang_now . '.';
 	  }
-	  $sanitizeRedirect = 'https://' . $subDomain . self::DOMAIN_PROD . Router::url();
-	  // TODO: commented out for the test. It has to be reactivated
-	  //$this->redirect($sanitizeRedirect);
+	  $sanitizeRedirect = 'https://' . $subDomain . 'api.' . self::DOMAIN_PROD . Router::url();
+	  $this->redirect($sanitizeRedirect);
 	}
 
 	// Start ====================================================
@@ -203,7 +202,7 @@ class AppController extends Controller
       //Access-Control-Allow-Headers
       //Access-Control-Allow-Methods
       $this->response->cors($this->request)
-        ->allowOrigin(['*'])
+        ->allowOrigin(['gluons.link', '*.gluons.link'])
         ->allowMethods(['GET,PUT,POST,DELETE,PATCH,OPTIONS'])
         ->allowHeaders(['x-xsrf-token', 'Origin', 'Content-Type', 'X-Auth-Token', 'Authorization'])
         ->allowCredentials(['true'])
