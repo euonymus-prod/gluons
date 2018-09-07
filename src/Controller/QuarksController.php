@@ -309,14 +309,21 @@ class QuarksController extends AppController
 		     ];
 
       $ja_pickup_ids = [
-		     '8fc93feb-2f36-43cd-be8e-438a2ddfaafa' => 'active', // 柳瀬唯夫
+		     '6bd9de91-815e-4d5d-aafb-7ce3a43c62c1' => 'active', // 宮田聡子
+		     '5a7fb826-8d86-4f7a-a74c-90d9296d82ba' => 'active', // 高須克弥
+		     '0726645c-0cfd-4b88-8e12-7ef8393de1c6' => 'active', // 宮川紗江
+		     '00da8e56-e670-4b98-86f4-fe0720df66e8' => 'active', // 石破茂
+		     '71543dad-37b0-4b97-9dec-969033d71a91' => 'active', // さくらももこ
+		     'a3a93852-cf59-4de3-a144-3cf2b607a332' => 'active', // 湊伸治
 		     '021e29e3-b3c9-4fee-bbe4-26a6e44efb40' => 'passive', // Hana倶楽部投資金未返還問題
-		     'df03fae8-16b0-4ba8-8309-d5ca64c1eb28' => 'active',  // NEM不正送金事件
-		     'f517ec88-e6a7-4592-b2dd-22b6d2cc17bd' => 'active',  // 火星（ファソン15）
-		     '1cb8d7a5-8297-4001-acfc-337d4e971fd8' => 'passive', // 51量子ビットをもった量子コンピュータ
-		     '78a3854f-d2c6-4494-9b1c-820ff1ccd0a9' => 'active',  // 第4次安倍内閣
-		     'be01bc00-ad55-426a-8e5c-35b8c7358710' => 'active',  // 第48回衆議院議員総選挙
 		     '6257e52a-f888-4d4c-a4c2-18e4cccfa94c' => 'active',  // 共謀罪
+
+		     //'df03fae8-16b0-4ba8-8309-d5ca64c1eb28' => 'active',  // NEM不正送金事件
+		     //'8fc93feb-2f36-43cd-be8e-438a2ddfaafa' => 'active', // 柳瀬唯夫
+		     //'f517ec88-e6a7-4592-b2dd-22b6d2cc17bd' => 'active',  // 火星（ファソン15）
+		     //'1cb8d7a5-8297-4001-acfc-337d4e971fd8' => 'passive', // 51量子ビットをもった量子コンピュータ
+		     //'78a3854f-d2c6-4494-9b1c-820ff1ccd0a9' => 'active',  // 第4次安倍内閣
+		     //'be01bc00-ad55-426a-8e5c-35b8c7358710' => 'active',  // 第48回衆議院議員総選挙
 		     //'3bd11ac9-b39e-4400-b25e-e177299719e6' => 'active',  // 豊田真由子
 		     //'df1cd605-00b9-4db5-9a31-9330cc41aaf8' => 'active',  // 豊田三郎
 		     //'3e1520f8-211a-46df-a3e2-bfc3cf51bba4' => 'active',  // 八島洋子
