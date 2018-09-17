@@ -513,7 +513,10 @@ class SubjectsTable extends AppTable
     {
       $expr = self::bigramize($search_words);
 
-      $whereSearch = "MATCH(SubjectSearches.search_words) AGAINST(:search)";
+      $whereSearch = "MATCH(SubjectSearches.search_words) AGAINST(:search IN BOOLEAN MODE)";
+      /* $whereSearch = "MATCH(SubjectSearches.search_words) AGAINST(:search WITH QUERY EXPANSION)"; */
+      /* $whereSearch = "MATCH(SubjectSearches.search_words) AGAINST(:search)"; */
+      
       $where = [$this->wherePrivacyExplicitly($privacy), $whereSearch];
       $query = $this->find('all');
 
