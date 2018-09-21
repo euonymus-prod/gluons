@@ -243,9 +243,18 @@ class RelationsTable extends AppTable
 
       $gluon_type_ids = [];
       foreach($q_property_g_type_query as $key => $val) {
-	$gluon_type_ids[] = $val->gluon_type_id;
+	if ($gluon_sides == 'active') {
+	  if ($val->sides != 2) {
+	    $gluon_type_ids[] = $val->gluon_type_id;
+	  }
+	} elseif ($gluon_sides == 'passive') {
+	  if ($val->sides != 1) {
+	    $gluon_type_ids[] = $val->gluon_type_id;
+	  }
+	}
       }
       $gluon_type_ids = array_unique($gluon_type_ids);
+      //\Cake\Log\Log::debug($gluon_type_ids);
 
       if ($gluon_sides == 'active') {
 	$ret = [
