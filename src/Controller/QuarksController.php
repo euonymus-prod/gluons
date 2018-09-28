@@ -309,15 +309,16 @@ class QuarksController extends AppController
 		     ];
 
       $ja_pickup_ids = [
+		     '422e5400-1933-47a2-a5dc-fe0a1ec86bfe' => 'active', // 川瀬賢太郎
 		     '0cf51d72-b415-496a-b94e-92e6f07e629e' => 'active', // 佐藤健 (俳優)
 		     '9f10a701-4a69-4428-9ed9-b74544f4c488' => 'active', // Zaif仮想通貨流出事件
 		     '456ba958-2871-4d4a-a28e-2ce3ac18ce1e' => 'active', // 前澤友作
 		     'b9ac937a-bce7-417e-9cda-617ecf104878' => 'active', // 樹木希林
 		     '5a7fb826-8d86-4f7a-a74c-90d9296d82ba' => 'active', // 高須克弥
 		     '0726645c-0cfd-4b88-8e12-7ef8393de1c6' => 'active', // 宮川紗江
-		     '71543dad-37b0-4b97-9dec-969033d71a91' => 'active', // さくらももこ
 		     'a3a93852-cf59-4de3-a144-3cf2b607a332' => 'active', // 湊伸治
 
+		     //'71543dad-37b0-4b97-9dec-969033d71a91' => 'active', // さくらももこ
 		     //'8cdbd05a-0fa1-4b2f-8ea5-baba549c3a36' => 'active', // アントニオ猪木
 		     //'6bd9de91-815e-4d5d-aafb-7ce3a43c62c1' => 'active', // 宮田聡子
 		     //'00da8e56-e670-4b98-86f4-fe0720df66e8' => 'active', // 石破茂
