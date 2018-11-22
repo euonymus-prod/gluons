@@ -20,6 +20,6 @@ class SubjectCompComponent extends Component
     // Execute any other additional setup for your component.
     public function initialize(array $config)
     {
-      //$this->Controller = $this->_registry->getController();
+        //$this->Controller = $this->_registry->getController();
     }
 }

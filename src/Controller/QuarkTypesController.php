@@ -22,9 +22,9 @@ class QuarkTypesController extends AppController
 
     public function index()
     {
-      $query = $this->QuarkTypes->find('list');
-      $this->set('quary_types', $query->toArray());
-      $this->set('_serialize', 'quary_types');
+        $query = $this->QuarkTypes->find('list');
+        $this->set('quary_types', $query->toArray());
+        $this->set('_serialize', 'quary_types');
     }
 
 }

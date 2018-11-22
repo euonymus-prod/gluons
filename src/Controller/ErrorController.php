@@ -32,11 +32,11 @@ class ErrorController extends AppController
     {
         $this->loadComponent('RequestHandler');
 
-	/* Added for API ******************************************/
-	$this->RequestHandler->renderAs($this, 'json');
-	$this->response->type('application/json');
-	$this->response->header("Access-Control-Allow-Origin: *");
-	/**********************************************************/
+        /* Added for API ******************************************/
+        $this->RequestHandler->renderAs($this, 'json');
+        $this->response->type('application/json');
+        $this->response->header("Access-Control-Allow-Origin: *");
+        /**********************************************************/
 
         $this->loadComponent('Auth', [
             'authorize' => ['Controller'],
@@ -60,7 +60,7 @@ class ErrorController extends AppController
     public function beforeFilter(Event $event)
     {
         $title = '404: Not Found';
-	$auth = $this->Auth;
+        $auth = $this->Auth;
 
         $this->set(compact(['auth']));
     }
@@ -93,13 +93,13 @@ class ErrorController extends AppController
     }
 
     private function setCorsHeaders() {
-      $this->response->cors($this->request)
-        ->allowOrigin(['*'])
-        ->allowMethods(['GET,PUT,POST,DELETE,PATCH,OPTIONS'])
-        ->allowHeaders(['x-xsrf-token', 'Origin', 'Content-Type', 'X-Auth-Token', 'Authorization'])
-        ->allowCredentials(['true'])
-        ->exposeHeaders(['Link'])
-        ->maxAge(300)
-        ->build();
+        $this->response->cors($this->request)
+            ->allowOrigin(['*'])
+            ->allowMethods(['GET,PUT,POST,DELETE,PATCH,OPTIONS'])
+            ->allowHeaders(['x-xsrf-token', 'Origin', 'Content-Type', 'X-Auth-Token', 'Authorization'])
+            ->allowCredentials(['true'])
+            ->exposeHeaders(['Link'])
+            ->maxAge(300)
+            ->build();
     }
 }

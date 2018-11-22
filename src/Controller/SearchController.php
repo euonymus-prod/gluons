@@ -26,29 +26,29 @@ class SearchController extends AppController
 
     public function initialize()
     {
-      parent::initialize();
-      $this->loadComponent('RequestHandler');
-      $this->RequestHandler->renderAs($this, 'json');
-      $this->response->type('application/json');
-      $this->response->header("Access-Control-Allow-Origin: *");
+        parent::initialize();
+        $this->loadComponent('RequestHandler');
+        $this->RequestHandler->renderAs($this, 'json');
+        $this->response->type('application/json');
+        $this->response->header("Access-Control-Allow-Origin: *");
     }
 
     public function index()
     {
-      if (!array_key_exists('keywords', $this->request->query)) {
-	$subjects = [];
-      } else {
-	if (!array_key_exists('limit', $this->request->query)) {
-	  $limit = 20;
-	} else {
-	  $limit = $this->request->query['limit'];
-	}
-	\App\Model\Table\SubjectsTable::$cachedRead = true;
-	$Subjects = TableRegistry::get('Subjects');
-	$queary = $Subjects->searchForApi($this->request->query['keywords'], $limit);
-      }
+        if (!array_key_exists('keywords', $this->request->query)) {
+            $subjects = [];
+        } else {
+            if (!array_key_exists('limit', $this->request->query)) {
+                $limit = 20;
+            } else {
+                $limit = $this->request->query['limit'];
+            }
+            \App\Model\Table\SubjectsTable::$cachedRead = true;
+            $Subjects = TableRegistry::get('Subjects');
+            $queary = $Subjects->searchForApi($this->request->query['keywords'], $limit);
+        }
 
-      $this->set('subjects', $this->paginate($queary));
-      $this->set('_serialize', 'subjects');
+        $this->set('subjects', $this->paginate($queary));
+        $this->set('_serialize', 'subjects');
     }
 }

@@ -95,11 +95,11 @@ class CategorylinksTable extends Table
     /*******************************************************/
     public function saveAsQuarkTreated($data)
     {
-      $query = $this->findByClFromAndClTo($data->cl_from, $data->cl_to);
-      if (!$query || !$query->first()) return false;
+        $query = $this->findByClFromAndClTo($data->cl_from, $data->cl_to);
+        if (!$query || !$query->first()) return false;
 
-      $data->status = self::STATUS_QUARK_TREATED;
-      return $this->save($data);
+        $data->status = self::STATUS_QUARK_TREATED;
+        return $this->save($data);
     }
 
     /*******************************************************/
@@ -107,36 +107,36 @@ class CategorylinksTable extends Table
     /*******************************************************/
     public function getNonTreated($type)
     {
-      if ($type == self::CATEGORY_TYPE_PERSON) {
-	$where2 = self::wherePerson();
-      } elseif ($type == self::CATEGORY_TYPE_MOVIE) {
-        $where2 = self::whereMovie();
-      } elseif ($type == self::CATEGORY_TYPE_ALBUM) {
-        $where2 = self::whereAlbum();
-      } elseif ($type == self::CATEGORY_TYPE_ELEMENTARY) {
-        $where2 = self::whereElementary();
-      } elseif ($type == self::CATEGORY_TYPE_JUNIOR_HIGH) {
-        $where2 = self::whereJuniorHigh();
-      } elseif ($type == self::CATEGORY_TYPE_HIGH_SCHOOL) {
-        $where2 = self::whereHighSchool();
-      } elseif ($type == self::CATEGORY_TYPE_UNIVERSITY) {
-        $where2 = self::whereUniversity();
-      } else return false;
+        if ($type == self::CATEGORY_TYPE_PERSON) {
+            $where2 = self::wherePerson();
+        } elseif ($type == self::CATEGORY_TYPE_MOVIE) {
+            $where2 = self::whereMovie();
+        } elseif ($type == self::CATEGORY_TYPE_ALBUM) {
+            $where2 = self::whereAlbum();
+        } elseif ($type == self::CATEGORY_TYPE_ELEMENTARY) {
+            $where2 = self::whereElementary();
+        } elseif ($type == self::CATEGORY_TYPE_JUNIOR_HIGH) {
+            $where2 = self::whereJuniorHigh();
+        } elseif ($type == self::CATEGORY_TYPE_HIGH_SCHOOL) {
+            $where2 = self::whereHighSchool();
+        } elseif ($type == self::CATEGORY_TYPE_UNIVERSITY) {
+            $where2 = self::whereUniversity();
+        } else return false;
 
-      $where = [self::whereNotTreated(), $where2];
-      return $this->find()->where([$where]);
+        $where = [self::whereNotTreated(), $where2];
+        return $this->find()->where([$where]);
     }
 
     public function getQuarkTreated($type)
     {
-      if ($type == self::CATEGORY_TYPE_ALBUM) {
-        $where2 = self::whereAlbumByArtist();
-      //} elseif ($type == self::CATEGORY_TYPE_UNIVERSITY) {
-      //   $where2 = self::whereUniversity();
-      } else return false;
+        if ($type == self::CATEGORY_TYPE_ALBUM) {
+            $where2 = self::whereAlbumByArtist();
+            //} elseif ($type == self::CATEGORY_TYPE_UNIVERSITY) {
+            //   $where2 = self::whereUniversity();
+        } else return false;
 
-      $where = [self::whereQuarkTreated(), $where2];
-      return $this->find()->where([$where]);
+        $where = [self::whereQuarkTreated(), $where2];
+        return $this->find()->where([$where]);
     }
 
     /*******************************************************/
@@ -144,42 +144,42 @@ class CategorylinksTable extends Table
     /*******************************************************/
     public static function whereNotTreated()
     {
-      return ['Categorylinks.status' => self::STATUS_NOT_TREATED];
+        return ['Categorylinks.status' => self::STATUS_NOT_TREATED];
     }
     public static function whereQuarkTreated()
     {
-      return ['Categorylinks.status' => self::STATUS_QUARK_TREATED];
+        return ['Categorylinks.status' => self::STATUS_QUARK_TREATED];
     }
     public static function wherePerson()
     {
-      return ['Categorylinks.cl_to like' => '%人物'];
+        return ['Categorylinks.cl_to like' => '%人物'];
     }
     public static function whereMovie()
     {
-      return ['Categorylinks.cl_to like' => '%映画'];
+        return ['Categorylinks.cl_to like' => '%映画'];
     }
     public static function whereAlbum()
     {
-      return ['Categorylinks.cl_to like' => '%アルバム'];
+        return ['Categorylinks.cl_to like' => '%アルバム'];
     }
     public static function whereAlbumByArtist()
     {
-      return [self::whereAlbum(), ['Categorylinks.cl_to not like' => '%年%']];
+        return [self::whereAlbum(), ['Categorylinks.cl_to not like' => '%年%']];
     }
     public static function whereElementarySchool()
     {
-      return ['Categorylinks.cl_to like' => '%の小学校'];
+        return ['Categorylinks.cl_to like' => '%の小学校'];
     }
     public static function whereJuniorHigh()
     {
-      return ['Categorylinks.cl_to like' => '%の中学校'];
+        return ['Categorylinks.cl_to like' => '%の中学校'];
     }
     public static function whereHighSchool()
     {
-      return ['Categorylinks.cl_to like' => '%の高等学校'];
+        return ['Categorylinks.cl_to like' => '%の高等学校'];
     }
     public static function whereUniversity()
     {
-      return ['Categorylinks.cl_to like' => '%の大学'];
+        return ['Categorylinks.cl_to like' => '%の大学'];
     }
 }

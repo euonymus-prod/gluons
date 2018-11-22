@@ -42,14 +42,14 @@ class QuarkPropertiesTable extends Table
 
         $this->addBehavior('Timestamp');
 
-	// These are the possible quark types of the property
+        // These are the possible quark types of the property
         $this->belongsToMany('QuarkTypes', [
-	    'through' => 'QpropertyTypes',
+            'through' => 'QpropertyTypes',
         ]);
 
-	// These are gluon types the property has
+        // These are gluon types the property has
         $this->belongsToMany('GluonTypes', [
-	    'through' => 'QpropertyGtypes',
+            'through' => 'QpropertyGtypes',
         ]);
     }
 

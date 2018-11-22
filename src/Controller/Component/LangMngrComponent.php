@@ -14,16 +14,16 @@ class LangMngrComponent extends Component
     // Execute any other additional setup for your component.
     public function initialize(array $config)
     {
-      $this->Controller = $this->_registry->getController();
+        $this->Controller = $this->_registry->getController();
     }
 
     public function txt($en, $ja)
     {
-      $lang_now = AppController::$lang;
-      $lang_eng = AppController::LANG_ENG;
-      if ($lang_now == $lang_eng) {
-	return $en;
-      }
-      return $ja;
+        $lang_now = AppController::$lang;
+        $lang_eng = AppController::LANG_ENG;
+        if ($lang_now == $lang_eng) {
+            return $en;
+        }
+        return $ja;
     }
 }

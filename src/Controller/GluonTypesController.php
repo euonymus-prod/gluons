@@ -22,9 +22,9 @@ class GluonTypesController extends AppController
 
     public function index()
     {
-      $query = $this->GluonTypes->find('list');
-      $this->set('gluon_types', $query->toArray());
-      $this->set('_serialize', 'gluon_types');
+        $query = $this->GluonTypes->find('list');
+        $this->set('gluon_types', $query->toArray());
+        $this->set('_serialize', 'gluon_types');
     }
 
 }

@@ -13,7 +13,7 @@ class ContactsController extends AppController
 
     public function index()
     {
-	$res = ['status' => 0, 'message' => 'Not accepted'];
+        $res = ['status' => 0, 'message' => 'Not accepted'];
 
         $contact = new ContactForm();
 
@@ -25,9 +25,9 @@ class ContactsController extends AppController
                 $res['message'] = 'Validation error.';
             }
         }
-	$title = $this->LangMngr->txt('Contact us', 'お問い合わせ');
+        $title = $this->LangMngr->txt('Contact us', 'お問い合わせ');
 
-	$this->set('mailsent', $res);
-	$this->set('_serialize', 'mailsent');
+        $this->set('mailsent', $res);
+        $this->set('_serialize', 'mailsent');
     }
 }

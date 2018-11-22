@@ -77,66 +77,66 @@ class Subject extends Entity
 
     // type lists
     public static $typeListHuman = [
-				    self::TYPE_BUNKER,
-				    self::TYPE_ARISTOCRACY,
-				    self::TYPE_POLITICIAN,
-				    self::TYPE_MILITARY_PERSON,
-				    self::TYPE_BUSINESS_PERSON,
-				    self::TYPE_SCIENTIST,
-				    self::TYPE_WRITER,
-				    self::TYPE_MUSICIAN,
-				    self::TYPE_COMEDIAN,
-				    self::TYPE_PAINTER,
-				    self::TYPE_ATHLETE,
-				    self::TYPE_ACTOR,
-				    self::TYPE_VOICE_ACTOR,
-				    self::TYPE_PHOTOGRAPHER,
-				    self::TYPE_PERSON,
-				    ];
+        self::TYPE_BUNKER,
+        self::TYPE_ARISTOCRACY,
+        self::TYPE_POLITICIAN,
+        self::TYPE_MILITARY_PERSON,
+        self::TYPE_BUSINESS_PERSON,
+        self::TYPE_SCIENTIST,
+        self::TYPE_WRITER,
+        self::TYPE_MUSICIAN,
+        self::TYPE_COMEDIAN,
+        self::TYPE_PAINTER,
+        self::TYPE_ATHLETE,
+        self::TYPE_ACTOR,
+        self::TYPE_VOICE_ACTOR,
+        self::TYPE_PHOTOGRAPHER,
+        self::TYPE_PERSON,
+    ];
 
     public static $typeListGroup = [
-				    self::TYPE_BUNK,
-				    self::TYPE_COUNTRY,
-				    self::TYPE_GOVERNMENT,
-				    self::TYPE_MILITARY_SERVICE,
-				    self::TYPE_COMPANY,
-				    self::TYPE_SCHOOL,
-				    ];
+        self::TYPE_BUNK,
+        self::TYPE_COUNTRY,
+        self::TYPE_GOVERNMENT,
+        self::TYPE_MILITARY_SERVICE,
+        self::TYPE_COMPANY,
+        self::TYPE_SCHOOL,
+    ];
 
     public static $typeListCreative = [
-				    self::TYPE_PRODUCT,
-				    self::TYPE_BOOK_ORIGINAL,
-				    self::TYPE_BOOK_DERIVATIVE,
-				    self::TYPE_MOVIE_ORIGINAL,
-				    self::TYPE_MOVIE_DERIVATIVE,
-				    self::TYPE_MANGA_ORIGINAL,
-				    self::TYPE_MANGA_DERIVATIVE,
-				    self::TYPE_ANIME_TV_ORIGINAL,
-				    self::TYPE_ANIME_TV_DERIVATIVE,
-				    self::TYPE_ANIME_OVA_ORIGINAL,
-				    self::TYPE_ANIME_OVA_DERIVATIVE,
-				    self::TYPE_ANIME_MV_ORIGINAL,
-				    self::TYPE_ANIME_MV_DERIVATIVE,
-				    self::TYPE_CHARACTER,
-				    ];
+        self::TYPE_PRODUCT,
+        self::TYPE_BOOK_ORIGINAL,
+        self::TYPE_BOOK_DERIVATIVE,
+        self::TYPE_MOVIE_ORIGINAL,
+        self::TYPE_MOVIE_DERIVATIVE,
+        self::TYPE_MANGA_ORIGINAL,
+        self::TYPE_MANGA_DERIVATIVE,
+        self::TYPE_ANIME_TV_ORIGINAL,
+        self::TYPE_ANIME_TV_DERIVATIVE,
+        self::TYPE_ANIME_OVA_ORIGINAL,
+        self::TYPE_ANIME_OVA_DERIVATIVE,
+        self::TYPE_ANIME_MV_ORIGINAL,
+        self::TYPE_ANIME_MV_DERIVATIVE,
+        self::TYPE_CHARACTER,
+    ];
 
     public static $typeListMomentaries = [
-				    self::TYPE_BOOK_ORIGINAL,
-				    self::TYPE_BOOK_DERIVATIVE,
-				    self::TYPE_MOVIE_ORIGINAL,
-				    self::TYPE_MOVIE_DERIVATIVE,
-				    self::TYPE_ANIME_MV_ORIGINAL,
-				    self::TYPE_ANIME_MV_DERIVATIVE,
-				    self::TYPE_CHARACTER,
-				    ];
+        self::TYPE_BOOK_ORIGINAL,
+        self::TYPE_BOOK_DERIVATIVE,
+        self::TYPE_MOVIE_ORIGINAL,
+        self::TYPE_MOVIE_DERIVATIVE,
+        self::TYPE_ANIME_MV_ORIGINAL,
+        self::TYPE_ANIME_MV_DERIVATIVE,
+        self::TYPE_CHARACTER,
+    ];
     public static $typeListBooks = [
-				    self::TYPE_BOOK_ORIGINAL,
-				    self::TYPE_BOOK_DERIVATIVE,
-				    ];
+        self::TYPE_BOOK_ORIGINAL,
+        self::TYPE_BOOK_DERIVATIVE,
+    ];
     public static $typeListMangas = [
-				    self::TYPE_MANGA_ORIGINAL,
-				    self::TYPE_MANGA_DERIVATIVE,
-				    ];
+        self::TYPE_MANGA_ORIGINAL,
+        self::TYPE_MANGA_DERIVATIVE,
+    ];
 
 
     /**
@@ -155,12 +155,12 @@ class Subject extends Entity
 
     public static function momentaryByType($type)
     {
-      return in_array($type, self::$typeListMomentaries);
+        return in_array($type, self::$typeListMomentaries);
     }
 
     public static function isPersonByType($type)
     {
-      return in_array($type, self::$typeListHuman);
+        return in_array($type, self::$typeListHuman);
     }
 
     /***********************************/
@@ -170,12 +170,12 @@ class Subject extends Entity
     const SIDES_BACKWARD = 2;
     public function filterForGluonType($gluonTypeArr, $targetSides)
     {
-      if (!in_array($targetSides, [self::SIDES_FORWARD, self::SIDES_BACKWARD])) return false;
-      foreach ($gluonTypeArr as $gluon_type_id => $sides) {
-	if (($this->_joinData->gluon_type_id == $gluon_type_id) && in_array($sides, [0,$targetSides])) {
-	  return $this;
-	}
-      }
-      return false;
+        if (!in_array($targetSides, [self::SIDES_FORWARD, self::SIDES_BACKWARD])) return false;
+        foreach ($gluonTypeArr as $gluon_type_id => $sides) {
+            if (($this->_joinData->gluon_type_id == $gluon_type_id) && in_array($sides, [0,$targetSides])) {
+                return $this;
+            }
+        }
+        return false;
     }
 }

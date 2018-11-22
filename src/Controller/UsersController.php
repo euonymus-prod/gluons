@@ -57,39 +57,39 @@ class UsersController extends AppController
 
     public function login()
     {
-	$res = ['status' => 0];
+        $res = ['status' => 0];
         if ($this->request->is('post')) {
             $user = $this->Auth->identify();
             if ($user) {
                 $this->Auth->setUser($user);
 
-		// update api_key, everytime user logged in
-		$selected = $this->Users->get($user['id'], ['contain' => []]);
-		$this->Users->addApiKey($selected);
-		$this->Users->save($selected);
+                // update api_key, everytime user logged in
+                $selected = $this->Users->get($user['id'], ['contain' => []]);
+                $this->Users->addApiKey($selected);
+                $this->Users->save($selected);
 
-		$this->Session->delete('PrivacyMode');
-		Cache::clear(false); 
+                $this->Session->delete('PrivacyMode');
+                Cache::clear(false); 
                 /* return $this->redirect($referer); */
 
-		$res = $selected;
-		$res['status'] = 1;
-		$res['message'] = 'The user has been logged in.';
+                $res = $selected;
+                $res['status'] = 1;
+                $res['message'] = 'The user has been logged in.';
             } else {
-	      $res['message'] = 'The user could not be logged in. Please, try again.';
-	    }
-	}
+                $res['message'] = 'The user could not be logged in. Please, try again.';
+            }
+        }
         $this->set(compact('res'));
         $this->set('_serialize', 'res');
     }
 
     public function logout()
     {
-	Cache::clear(false); 
+        Cache::clear(false); 
         $this->Session->write('PrivacyMode', \App\Controller\AppController::PRIVACY_ALL);
         //return $this->redirect($this->Auth->logout());
-	$this->Auth->logout();
-	$res['message'] = 'Logged out';
+        $this->Auth->logout();
+        $res['message'] = 'Logged out';
         $this->set(compact('res'));
         $this->set('_serialize', 'res');
     }
@@ -101,20 +101,20 @@ class UsersController extends AppController
      */
     public function add()
     {
-	$res = ['status' => 0];
+        $res = ['status' => 0];
         $user = $this->Users->newEntity();
-	$res = [];
+        $res = [];
         if ($this->request->is('post')) {
             $user = $this->Users->patchEntity($user, $this->request->data);
             if ($saved = $this->Users->save($user)) {
-	      $res = $saved;
-	      $res['status'] = 1;
-	      $res['role'] = 'author';
-	      $res['default_saving_privacy'] = false;
-	      $res['default_showing_privacy'] = 3;
-	      $res['message'] = 'The user has been saved.';
+                $res = $saved;
+                $res['status'] = 1;
+                $res['role'] = 'author';
+                $res['default_saving_privacy'] = false;
+                $res['default_showing_privacy'] = 3;
+                $res['message'] = 'The user has been saved.';
             } else {
-	      $res['message'] = 'The user could not be saved. Please, try again.';
+                $res['message'] = 'The user could not be saved. Please, try again.';
             }
         }
 
@@ -145,7 +145,7 @@ class UsersController extends AppController
                 $this->Flash->error(__('The user could not be saved. Please, try again.'));
             }
         }
-	$title = 'Edit your account';
+        $title = 'Edit your account';
 
         $this->set(compact('user', 'title'));
         $this->set('_serialize', ['user']);
@@ -156,12 +156,12 @@ class UsersController extends AppController
         $this->request->allowMethod(['post', 'delete']);
         $user = $this->Users->get($id);
 
-	$res = [];
+        $res = [];
         if ($this->Users->delete($user)) {
-	    Cache::clear(false); 
-	    $res['message'] = 'The user has been deleted.';
+            Cache::clear(false); 
+            $res['message'] = 'The user has been deleted.';
         } else {
-	    $res['message'] = 'The user could not be deleted. Please, try again.';
+            $res['message'] = 'The user could not be deleted. Please, try again.';
         }
         $this->set(compact('res'));
         $this->set('_serialize', 'res');

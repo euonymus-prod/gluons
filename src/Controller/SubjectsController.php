@@ -39,15 +39,15 @@ class SubjectsController extends AppController
         $options = [
             'conditions' => [$this->Subjects->wherePrivacy()]
         ];
-	$order = false;
+        $order = false;
         if (!isset($this->request->query['type']) || $this->request->query['type'] != 0) {
-	  $options['order'] = ['Subjects.created' => 'desc'];
-	  $order = true;
+            $options['order'] = ['Subjects.created' => 'desc'];
+            $order = true;
         }
         $this->paginate = $options;
 
         $subjects = $this->paginate($this->Subjects, ['contain' => 'Actives']);
-	$title = 'quarks that gluons hold';
+        $title = 'quarks that gluons hold';
 
         $this->set(compact('subjects', 'title', 'order'));
         $this->set('_serialize', ['subjects']);
@@ -55,17 +55,17 @@ class SubjectsController extends AppController
 
     public function search()
     {
-      if (!array_key_exists('keywords', $this->request->query)) $this->redirect('/');
+        if (!array_key_exists('keywords', $this->request->query)) $this->redirect('/');
 
-      \App\Model\Table\SubjectsTable::$cachedRead = true;
-      $subjects = $this->Subjects->search($this->request->query['keywords']);
+        \App\Model\Table\SubjectsTable::$cachedRead = true;
+        $subjects = $this->Subjects->search($this->request->query['keywords']);
 
-      $title = $this->LangMngr->txt('Search results of ' . $this->request->query['keywords'],
-				    $this->request->query['keywords'] . 'の検索結果');
+        $title = $this->LangMngr->txt('Search results of ' . $this->request->query['keywords'],
+                                      $this->request->query['keywords'] . 'の検索結果');
 
-      $this->set(compact('subjects', 'title'));
-      $this->set('_serialize', ['subjects']);
-      $this->render('index');
+        $this->set(compact('subjects', 'title'));
+        $this->set('_serialize', ['subjects']);
+        $this->render('index');
     }
 
     /**
@@ -79,56 +79,56 @@ class SubjectsController extends AppController
     {
         // sanitize
         if ($second_type == 'active') {
-	  $this->redirect('/subjects/relations/' . $name);
-	}
-
-        if ( ($second_type != 'none') && ($second_type != 'passive') ) {
-	  $second_type = 'active';
+            $this->redirect('/subjects/relations/' . $name);
         }
 
-	$contain['Actives'] = function ($q) {
-	  // MEMO: 暫定対策で limit 1000
-	  return $q->where(['Relations.baryon_id is NULL'])->limit(1000);
-	};
-	$contain['Passives'] = function ($q) {
-	  // MEMO: 暫定対策で limit 1000
-	  return $q->where(['Relations.baryon_id is NULL'])->limit(1000);
-	};
-	$contain[] = 'QuarkProperties';
+        if ( ($second_type != 'none') && ($second_type != 'passive') ) {
+            $second_type = 'active';
+        }
 
-	try {
-	  \App\Model\Table\SubjectsTable::$cachedRead = true;
-	  $subject = $this->Subjects->getRelationsByName($name, $contain, 2, $second_type);
-	} catch(\Exception $e) {
-	  try {
-	    $forRedirect = $this->Subjects->get($name);
-	  } catch(\Exception $e) {
-	    throw new NotFoundException('Record not found in table "subjects"');
-	  }
-	  $suffix = ($second_type == 'active') ? '' : '/' . $second_type;
-	  return $this->redirect('/subjects/relations/' . urlencode($forRedirect->name) . $suffix, 301);
-	}
+        $contain['Actives'] = function ($q) {
+            // MEMO: 暫定対策で limit 1000
+            return $q->where(['Relations.baryon_id is NULL'])->limit(1000);
+        };
+        $contain['Passives'] = function ($q) {
+            // MEMO: 暫定対策で limit 1000
+            return $q->where(['Relations.baryon_id is NULL'])->limit(1000);
+        };
+        $contain[] = 'QuarkProperties';
 
-	// just in case;
-	if (!$subject) return $this->redirect('/');
+        try {
+            \App\Model\Table\SubjectsTable::$cachedRead = true;
+            $subject = $this->Subjects->getRelationsByName($name, $contain, 2, $second_type);
+        } catch(\Exception $e) {
+            try {
+                $forRedirect = $this->Subjects->get($name);
+            } catch(\Exception $e) {
+                throw new NotFoundException('Record not found in table "subjects"');
+            }
+            $suffix = ($second_type == 'active') ? '' : '/' . $second_type;
+            return $this->redirect('/subjects/relations/' . urlencode($forRedirect->name) . $suffix, 301);
+        }
 
-	$title_second_level = '';
-	if ($second_type == 'passive') {
-	  //$title_second_level = '[' . $second_type . ' relation]';
-	  $title_second_level = '[' . $second_type . ']';
-	} elseif ($second_type == 'none') {
-	  //$title_second_level = '[no second relation]';
-	  $title_second_level = '[simple]';
-	}
-	$title = $subject->name . $title_second_level;
+        // just in case;
+        if (!$subject) return $this->redirect('/');
 
-	// build canonical
-	$second_type_path = ($second_type == 'active') ? '' : '/' . $second_type;
-	$domain = Router::url('/', true);
-	$canonical = $domain . 'subjects/relations/' . $name . $second_type_path;
+        $title_second_level = '';
+        if ($second_type == 'passive') {
+            //$title_second_level = '[' . $second_type . ' relation]';
+            $title_second_level = '[' . $second_type . ']';
+        } elseif ($second_type == 'none') {
+            //$title_second_level = '[no second relation]';
+            $title_second_level = '[simple]';
+        }
+        $title = $subject->name . $title_second_level;
+
+        // build canonical
+        $second_type_path = ($second_type == 'active') ? '' : '/' . $second_type;
+        $domain = Router::url('/', true);
+        $canonical = $domain . 'subjects/relations/' . $name . $second_type_path;
 
         $QpropertyGtypes = TableRegistry::get('QpropertyGtypes');
-	$this->set('qproperty_gtypes', $QpropertyGtypes->find());
+        $this->set('qproperty_gtypes', $QpropertyGtypes->find());
         $this->set(compact('subject', 'second_type', 'title', 'canonical'));
         $this->set('_serialize', ['subject']);
     }
@@ -141,26 +141,26 @@ class SubjectsController extends AppController
     public function add($confirm = null)
     {
         if (is_null($confirm) || ($confirm != 'confirm')) {
-	  $this->Session->delete('SavingSubjects');
-	}
+            $this->Session->delete('SavingSubjects');
+        }
 
         // Session check
         $this->Session->delete('ExistingSubjects');
         $session = unserialize($this->Session->read('SavingSubjects'));
-	if ($session) {
-	  $this->Session->delete('SavingSubjects');
-	  $this->request->data = $session;
-	}
+        if ($session) {
+            $this->Session->delete('SavingSubjects');
+            $this->request->data = $session;
+        }
 
         // Existence check
         if ($this->request->is('post')) {
-	  $query = $this->Subjects->search($this->request->data['name']);
-	  if (iterator_count($query)) {
-	    $this->Session->write('ExistingSubjects', serialize($query->toArray()));
-	    $this->Session->write('SavingSubjects', serialize($this->request->data));
-	    return $this->redirect(['action' => 'confirm']);
-	  }
-	}
+            $query = $this->Subjects->search($this->request->data['name']);
+            if (iterator_count($query)) {
+                $this->Session->write('ExistingSubjects', serialize($query->toArray()));
+                $this->Session->write('SavingSubjects', serialize($this->request->data));
+                return $this->redirect(['action' => 'confirm']);
+            }
+        }
 
         // Saving
         $subject = $this->Subjects->newEntity();
@@ -178,19 +178,19 @@ class SubjectsController extends AppController
             }
         }
 
-	$title = 'Adding new quark';
-	$this->set('quark_types', $this->Subjects->QuarkTypes->find('list'));
-	$this->set(compact('subject', 'title'));
+        $title = 'Adding new quark';
+        $this->set('quark_types', $this->Subjects->QuarkTypes->find('list'));
+        $this->set(compact('subject', 'title'));
         $this->set('_serialize', ['subject']);
     }
 
     public function confirm()
     {
-      $saving = unserialize($this->Session->read('SavingSubjects'));
-      $subjects = unserialize($this->Session->read('ExistingSubjects'));
-      $title = 'Check if the quark already exists, before adding';
-      $this->set(compact('saving', 'subjects', 'title'));
-      $this->set('_serialize', ['subjects']);
+        $saving = unserialize($this->Session->read('SavingSubjects'));
+        $subjects = unserialize($this->Session->read('ExistingSubjects'));
+        $title = 'Check if the quark already exists, before adding';
+        $this->set(compact('saving', 'subjects', 'title'));
+        $this->set('_serialize', ['subjects']);
     }
 
     /**
@@ -212,14 +212,14 @@ class SubjectsController extends AppController
 
             if ($savedSubject = $this->Subjects->save($subject)) {
                 $this->_setFlash(__('The quark has been saved.'));
-		Cache::clear(false); 
+                Cache::clear(false); 
                 return $this->redirect(['action' => 'relations', $savedSubject->name]);
             } else {
                 $this->_setFlash(__('The quark could not be saved. Please, try again.'), true); 
             }
         }
-	$title = 'Editing quark';
-	$this->set('quark_types', $this->Subjects->QuarkTypes->find('list'));
+        $title = 'Editing quark';
+        $this->set('quark_types', $this->Subjects->QuarkTypes->find('list'));
         $this->set(compact('subject', 'title'));
         $this->set('_serialize', ['subject']);
     }
@@ -237,10 +237,10 @@ class SubjectsController extends AppController
         $subject = $this->Subjects->get($id);
 
         if ($this->Subjects->delete($subject)) {
-	    $this->_setFlash(__('The quark has been deleted.'));
-	    Cache::clear(false); 
+            $this->_setFlash(__('The quark has been deleted.'));
+            Cache::clear(false); 
         } else {
-	    $this->_setFlash(__('The quark could not be deleted. Please, try again.'), true);
+            $this->_setFlash(__('The quark could not be deleted. Please, try again.'), true);
         }
 
         return $this->redirect(['controller' => 'Subjects', 'action' => 'index']);

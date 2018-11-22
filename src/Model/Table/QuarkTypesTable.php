@@ -63,9 +63,9 @@ class QuarkTypesTable extends Table
 
         $this->addBehavior('Timestamp');
 
-	// These are the properties the quark type contains through gluon
+        // These are the properties the quark type contains through gluon
         $this->belongsToMany('QuarkProperties', [
-	    'through' => 'QtypeProperties',
+            'through' => 'QtypeProperties',
             'foreignKey' => 'quark_type_id',
         ]);
     }
@@ -114,7 +114,7 @@ class QuarkTypesTable extends Table
     /*******************************************************/
     public function getImagePath($id)
     {
-      return $this->findById($id)->select('image_path')->first()->image_path;
+        return $this->findById($id)->select('image_path')->first()->image_path;
     }
 
     /*******************************************************/
@@ -122,19 +122,19 @@ class QuarkTypesTable extends Table
     /*******************************************************/
     public static function whereIsPerson()
     {
-      return ['QuarkTypes.id' => self::TYPE_PERSON];
+        return ['QuarkTypes.id' => self::TYPE_PERSON];
     }
     public static function whereIsMovie()
     {
-      return ['QuarkTypes.id' => self::TYPE_MOVIE];
+        return ['QuarkTypes.id' => self::TYPE_MOVIE];
     }
 
     public static function whereAllRecord()
     {
-      return ['1' => '1'];
+        return ['1' => '1'];
     }
     public static function whereNoRecord()
     {
-      return ['QuarkTypes.id' => false];
+        return ['QuarkTypes.id' => false];
     }
 }

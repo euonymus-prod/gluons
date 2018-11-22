@@ -35,19 +35,19 @@ class QuarkPropertiesController extends AppController
 
     public function initialize()
     {
-      parent::initialize();
-      $this->loadComponent('RequestHandler');
-      $this->RequestHandler->renderAs($this, 'json');
-      $this->response->type('application/json');
-      $this->response->header("Access-Control-Allow-Origin: *");
+        parent::initialize();
+        $this->loadComponent('RequestHandler');
+        $this->RequestHandler->renderAs($this, 'json');
+        $this->response->type('application/json');
+        $this->response->header("Access-Control-Allow-Origin: *");
     }
 
     public function index($quark_type_id = null)
     {
-      $QtypeProperties = TableRegistry::get('QtypeProperties');
-      $query = $QtypeProperties->find()->where(['quark_type_id' => $quark_type_id])->contain(['QuarkProperties']);
-      $this->set('articles', $query->all());
-      $this->set('_serialize', 'articles');
+        $QtypeProperties = TableRegistry::get('QtypeProperties');
+        $query = $QtypeProperties->find()->where(['quark_type_id' => $quark_type_id])->contain(['QuarkProperties']);
+        $this->set('articles', $query->all());
+        $this->set('_serialize', 'articles');
     }
 
 }

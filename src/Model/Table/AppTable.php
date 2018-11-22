@@ -32,17 +32,17 @@ class AppTable extends Table
     public function initialize(array $config)
     {
         parent::initialize($config);
-	$prefix = '';
+        $prefix = '';
 
-	$this->lang = Configure::read('Belongsto.lang');
-	$this->lang_eng = Configure::read('Belongsto.lang_eng');
-	if ($this->lang != $this->lang_eng) {
-	  $prefix = $this->lang . '_';
-	}
+        $this->lang = Configure::read('Belongsto.lang');
+        $this->lang_eng = Configure::read('Belongsto.lang_eng');
+        if ($this->lang != $this->lang_eng) {
+            $prefix = $this->lang . '_';
+        }
 
-	self::$subjects         = $prefix . self::TABLE_SUBJECT;
-	self::$subject_searches = $prefix . self::TABLE_SUBJECT_SEARCH;
-	self::$relations        = $prefix . self::TABLE_RELATION;
+        self::$subjects         = $prefix . self::TABLE_SUBJECT;
+        self::$subject_searches = $prefix . self::TABLE_SUBJECT_SEARCH;
+        self::$relations        = $prefix . self::TABLE_RELATION;
 
         $this->privacyMode = Configure::read('Belongsto.privacyMode');
         $this->auth = Configure::read('Belongsto.auth');

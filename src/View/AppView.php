@@ -36,7 +36,7 @@ class AppView extends View
      */
     public function initialize()
     {
-      $this->loadHelper('Page');
-      $this->loadHelper('SubjectTool');
+        $this->loadHelper('Page');
+        $this->loadHelper('SubjectTool');
     }
 }

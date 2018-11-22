@@ -97,61 +97,61 @@ class ActivesTable extends AppTable
     /*******************************************************/
     public function wherePrivacyId($id)
     {
-      return [self::whereId($id), self::wherePrivacy()];
+        return [self::whereId($id), self::wherePrivacy()];
     }
     public function wherePrivacy()
     {
-      if ($this->privacyMode == \App\Controller\AppController::PRIVACY_PUBLIC) {
-	return self::wherePublic();
-      } elseif ($this->privacyMode == \App\Controller\AppController::PRIVACY_PRIVATE) {
-	return self::wherePrivate($this->auth->user('id'));
-      } elseif ($this->privacyMode == \App\Controller\AppController::PRIVACY_ALL) {
-	return self::whereAllPrivacy($this->auth->user('id'));
-      } elseif ($this->privacyMode == \App\Controller\AppController::PRIVACY_ADMIN) {
-	return self::whereAllRecord();
-      }
-      return self::whereNoRecord();
+        if ($this->privacyMode == \App\Controller\AppController::PRIVACY_PUBLIC) {
+            return self::wherePublic();
+        } elseif ($this->privacyMode == \App\Controller\AppController::PRIVACY_PRIVATE) {
+            return self::wherePrivate($this->auth->user('id'));
+        } elseif ($this->privacyMode == \App\Controller\AppController::PRIVACY_ALL) {
+            return self::whereAllPrivacy($this->auth->user('id'));
+        } elseif ($this->privacyMode == \App\Controller\AppController::PRIVACY_ADMIN) {
+            return self::whereAllRecord();
+        }
+        return self::whereNoRecord();
     }
 
     public function wherePrivacyExplicitly($privacy_mode)
     {
-      if ($privacy_mode == \App\Controller\AppController::PRIVACY_PUBLIC) {
-	return self::wherePublic();
-      } elseif ($privacy_mode == \App\Controller\AppController::PRIVACY_PRIVATE) {
-	return self::wherePrivate($this->auth->user('id'));
-      } elseif ($privacy_mode == \App\Controller\AppController::PRIVACY_ALL) {
-	return self::whereAllPrivacy($this->auth->user('id'));
-      } elseif ($privacy_mode == \App\Controller\AppController::PRIVACY_ADMIN) {
-	return self::whereAllRecord();
-      }
-      return self::whereNoRecord();
+        if ($privacy_mode == \App\Controller\AppController::PRIVACY_PUBLIC) {
+            return self::wherePublic();
+        } elseif ($privacy_mode == \App\Controller\AppController::PRIVACY_PRIVATE) {
+            return self::wherePrivate($this->auth->user('id'));
+        } elseif ($privacy_mode == \App\Controller\AppController::PRIVACY_ALL) {
+            return self::whereAllPrivacy($this->auth->user('id'));
+        } elseif ($privacy_mode == \App\Controller\AppController::PRIVACY_ADMIN) {
+            return self::whereAllRecord();
+        }
+        return self::whereNoRecord();
     }
 
     public static function whereId($id)
     {
-      return ['Actives.id' => $id];
+        return ['Actives.id' => $id];
     }
 
     public static function wherePublic()
     {
-      return ['Actives.is_private' => false];
+        return ['Actives.is_private' => false];
     }
     public static function wherePrivate($user_id)
     {
-      return ['Actives.is_private' => true, 'Actives.user_id' => $user_id];
+        return ['Actives.is_private' => true, 'Actives.user_id' => $user_id];
     }
     public static function whereAllPrivacy($user_id)
     {
-      return ['or' => [self::wherePrivate($user_id), self::wherePublic()]];
+        return ['or' => [self::wherePrivate($user_id), self::wherePublic()]];
     }
 
 
     public static function whereAllRecord()
     {
-      return [true];
+        return [true];
     }
     public static function whereNoRecord()
     {
-      return ['Actives.id' => false];
+        return ['Actives.id' => false];
     }
 }

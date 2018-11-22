@@ -36,21 +36,21 @@ class QuarkProperty extends Entity
 
     public function targetGluons($subject, $qproperty_gtypes)
     {
-      $candidates = [];
-      foreach ($qproperty_gtypes as $qproperty_gtype) {
-	$candidates += $qproperty_gtype->arrForProp($this->id);
-      }
-      $ret = [];
-      foreach ($subject->passives as $relation) {
-	if ($relation->filterForGluonType($candidates, Subject::SIDES_FORWARD)) {
-	  $ret[] = ['relation' => $relation, 'sides' => Subject::SIDES_FORWARD];
-	}
-      }
-      foreach ($subject->actives as $relation) {
-	if ($relation->filterForGluonType($candidates, Subject::SIDES_BACKWARD)) {
-	  $ret[] = ['relation' => $relation, 'sides' => Subject::SIDES_BACKWARD];
-	}
-      }
-      return $ret;
+        $candidates = [];
+        foreach ($qproperty_gtypes as $qproperty_gtype) {
+            $candidates += $qproperty_gtype->arrForProp($this->id);
+        }
+        $ret = [];
+        foreach ($subject->passives as $relation) {
+            if ($relation->filterForGluonType($candidates, Subject::SIDES_FORWARD)) {
+                $ret[] = ['relation' => $relation, 'sides' => Subject::SIDES_FORWARD];
+            }
+        }
+        foreach ($subject->actives as $relation) {
+            if ($relation->filterForGluonType($candidates, Subject::SIDES_BACKWARD)) {
+                $ret[] = ['relation' => $relation, 'sides' => Subject::SIDES_BACKWARD];
+            }
+        }
+        return $ret;
     }
 }

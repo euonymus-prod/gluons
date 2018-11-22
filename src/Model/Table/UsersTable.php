@@ -47,29 +47,29 @@ class UsersTable extends Table
 
     public function beforeSave(Event $event)
     {
-      $entity = $event->getData('entity');
+        $entity = $event->getData('entity');
 
-      if ($entity->isNew()) {
-	$entity = self::addApiKey($entity);
-      }
-      return true;
+        if ($entity->isNew()) {
+            $entity = self::addApiKey($entity);
+        }
+        return true;
     }
 
     public static function addApiKey($data) {
-	$apiKeys = self::generateApiKey();
-	$data->api_key_plain = $apiKeys['api_key_plain'];
-	$data->api_key = $apiKeys['api_key'];
-	return $data;
+        $apiKeys = self::generateApiKey();
+        $data->api_key_plain = $apiKeys['api_key_plain'];
+        $data->api_key = $apiKeys['api_key'];
+        return $data;
     }
     public static function generateApiKey() {
-      // API の 'トークン' を生成
-      $api_key_plain = Security::hash(Security::randomBytes(32), 'sha256', false);
+        // API の 'トークン' を生成
+        $api_key_plain = Security::hash(Security::randomBytes(32), 'sha256', false);
 
-      // ログインの際に BasicAuthenticate がチェックする
-      // トークンを Bcrypt で暗号化
-      $hasher = new DefaultPasswordHasher();
-      $api_key = $hasher->hash($api_key_plain);
-      return ['api_key' => $api_key, 'api_key_plain' => $api_key_plain];
+        // ログインの際に BasicAuthenticate がチェックする
+        // トークンを Bcrypt で暗号化
+        $hasher = new DefaultPasswordHasher();
+        $api_key = $hasher->hash($api_key_plain);
+        return ['api_key' => $api_key, 'api_key_plain' => $api_key_plain];
     }
 
 
@@ -100,7 +100,7 @@ class UsersTable extends Table
             ->notEmpty('password', 'A password is required');
 
         $validator
-	  //->requirePresence('role', 'create')
+            //->requirePresence('role', 'create')
             ->notEmpty('role', 'A role is required')
             ->add('role', 'inList', [
                 'rule' => ['inList', ['admin', 'author']],

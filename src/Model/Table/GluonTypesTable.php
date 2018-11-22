@@ -40,9 +40,9 @@ class GluonTypesTable extends Table
 
         $this->addBehavior('Timestamp');
 
-	// These are the possible properties of the gluon type
+        // These are the possible properties of the gluon type
         $this->belongsToMany('QuarkProperties', [
-	    'through' => 'QpropertyGtypes',
+            'through' => 'QpropertyGtypes',
         ]);
     }
 
