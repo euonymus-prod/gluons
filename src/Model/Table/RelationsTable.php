@@ -213,18 +213,21 @@ class RelationsTable extends AppTable
         if (empty($quark_id)) {
             return self::whereNoRecord();
         }
-      
+
+        // quark自体の有無チェック
         $Subjects = TableRegistry::get('Subjects');
         $subject = $Subjects->findById($quark_id)->contain(['QuarkProperties'])->first();
         if (empty($subject)) {
             return self::whereNoRecord();
         }
 
+        // quarkのquark_typeに対するプロパティチェック
         $quark_property_ids = [];
         foreach($subject->quark_properties as $key => $val) {
             $quark_property_ids[] = $val->id;
         }
         if (empty($quark_property_ids)) {
+            // quark_propertyが無ければ全てをNo-QuarkPropertyとみなす条件文を返却
             if ($gluon_sides == 'active') {
                 $ret = ['Relations.active_id' => $quark_id];
             } elseif ($gluon_sides == 'passive') {
@@ -234,13 +237,24 @@ class RelationsTable extends AppTable
             }
             return array_merge($ret, self::whereNoBaryon());
         }
-      
+
+        // quark_propertyに対応するgluon_typeをチェック
         $QpropertyGtypes = TableRegistry::get('QpropertyGtypes');
         $q_property_g_type_query = $QpropertyGtypes->find()->where(['QpropertyGtypes.quark_property_id in' => $quark_property_ids]);
         if ($q_property_g_type_query->count() == 0) {
-            return self::whereNoRecord();
+            // quark_propertyに対するgluon_typeが無ければ全てをNo-QuarkPropertyとみなす条件文を返却
+            // return self::whereNoRecord();
+            if ($gluon_sides == 'active') {
+                $ret = ['Relations.active_id' => $quark_id];
+            } elseif ($gluon_sides == 'passive') {
+                $ret = ['Relations.passive_id' => $quark_id];
+            } else {
+                return self::whereNoRecord();
+            }
+            return array_merge($ret, self::whereNoBaryon());
         }
 
+        // gluon_type_idをactive, passive, bothごとに分類
         $gluon_type_ids = [];
         foreach($q_property_g_type_query as $key => $val) {
             if ($gluon_sides == 'active') {
@@ -256,6 +270,19 @@ class RelationsTable extends AppTable
         $gluon_type_ids = array_unique($gluon_type_ids);
         //\Cake\Log\Log::debug($gluon_type_ids);
 
+        if (empty($gluon_type_ids)) {
+            // 対象となるgluon_type_idがなければ全てをNo-QuarkPropertyとみなす条件文を返却
+            if ($gluon_sides == 'active') {
+                $ret = ['Relations.active_id' => $quark_id];
+            } elseif ($gluon_sides == 'passive') {
+                $ret = ['Relations.passive_id' => $quark_id];
+            } else {
+                return self::whereNoRecord();
+            }
+            return array_merge($ret, self::whereNoBaryon());
+        }
+
+        // やっと本題条件式の記述。
         if ($gluon_sides == 'active') {
             $ret = [
                 'Relations.active_id' => $quark_id,
