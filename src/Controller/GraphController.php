@@ -10,6 +10,8 @@ use Cake\Cache\Cache;
 use Cake\Routing\Router;
 use App\Utils\U;
 
+use GraphAware\Neo4j\Client\ClientBuilder;
+
 /**
  * Graph Controller
  *
@@ -37,6 +39,7 @@ class GraphController extends AppController
     // API endpoint:  /graph/:name
     public function name($name = null)
     {
+        require_once 'vendor/autoload.php';
         // $Subjects = TableRegistry::get('Subjects');
       
         // $query = $Subjects->find()->where($Subjects->wherePrivacyName($name));
@@ -45,6 +48,14 @@ class GraphController extends AppController
         // } else {
         //     $res = $query->first();
         // }
+
+        $client = ClientBuilder::create()
+                ->addConnection('bolt', 'bolt://neo4j:neo4jn30Aj@localhost:7687')
+                ->build();
+
+        $query = 'MATCH (a {name:"眞弓聡"})-[*1..2]-(p) RETURN DISTINCT a,p';
+        $result = $client->sendCypherQuery($query)->getResult();
+
         $res = ['hoge' => 'hage'];
         $this->set('articles', $res);
         $this->set('_serialize', 'articles');
