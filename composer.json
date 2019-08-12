@@ -10,7 +10,7 @@
         "mobiledetect/mobiledetectlib": "2.*",
         "cakephp/migrations": "~1.0",
         "cakephp/plugin-installer": "*",
-	"graphaware/neo4j-php-client": "^4.0"
+	"neoxygen/neoclient":"~2.1"
     },
     "require-dev": {
         "psy/psysh": "@stable",
