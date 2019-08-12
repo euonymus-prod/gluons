@@ -101,6 +101,9 @@ Router::scope('/', function (RouteBuilder $routes) {
     $routes->get('/private_gluons/:quark_id/:quark_type_id/:privacy', ['controller' => 'Gluons', 'action' => 'privateListview'])
       ->setPass(['quark_id', 'quark_type_id', 'privacy']);
     /**************************************************************************/
+    $routes->connect('/graph/*', ['controller' => 'Graph', 'action' => 'name']);
+    $routes->connect('/private_graph/*', ['controller' => 'Graph', 'action' => 'privateName']);
+    /**************************************************************************/
 
     /**
      * Connect catchall routes for all controllers.
