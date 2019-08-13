@@ -57,7 +57,7 @@ class GraphController extends AppController
                 ->addConnection('default', $connUrl['scheme'], $connUrl['host'], $connUrl['port'], true, $user, $password)
                 ->setAutoFormatResponse(true)
                 ->build();
-        $query = 'MATCH (a {name:"眞弓聡"})-[*1..2]-(p) RETURN DISTINCT a,p';
+        $query = 'MATCH (a {name:"ドナルド・トランプ"})-[*1..2]-(p) RETURN DISTINCT a,p';
         $result = $client->sendCypherQuery($query)->getResult();
         $user = $result->getSingleNode();
         $name = $user->getProperty('name');
