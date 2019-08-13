@@ -77,7 +77,27 @@ class GraphController extends AppController
                 ->addConnection('http', 'http://neo4j:neo4jn30Aj@localhost:7474')
                 ->build();
 
-        $query = 'MATCH (subject {name: {name}})-[relation]-(object) RETURN DISTINCT subject, object, relation';
+        // TODO: Testing Privacy modes
+
+        // Admin
+        // $query = 'MATCH (subject {name: {name}})-[relation]-(object) RETURN DISTINCT subject, object, relation';
+
+        // Only Public
+//         $query = 'MATCH (subject {name: {name}, is_private: false})-[relation]-(object {is_private: false}) RETURN DISTINCT subjec
+// t, object, relation';
+
+        // Only Private
+        // $query = 'MATCH (subject {name: {name}, is_private: true, user_id: 2})-[relation]-(object {is_private: true, user_id: 2}) RETURN DISTINCT subject, object, relation';
+
+        // All The User can see
+        $query = 'MATCH (subject {name: {name}})-[relation]-(object) '
+               .'WHERE ('
+               .'(subject.is_private = false OR subject.user_id = 2) AND '
+               .'(object.is_private = false OR object.user_id = 2) '
+               .') '
+               .'RETURN DISTINCT subject, object, relation';
+
+
         $parameter = ['name' => $name];
         $result = $client->run($query, $parameter);
         if (!$result->records()) return false;
