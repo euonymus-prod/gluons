@@ -10,7 +10,7 @@ use Cake\Cache\Cache;
 use Cake\Routing\Router;
 use App\Utils\U;
 
-use Neoxygen\NeoClient\ClientBuilder;
+use GraphAware\Neo4j\Client\ClientBuilder;
 use Cake\Log\Log;
 
 /**
@@ -49,21 +49,17 @@ class GraphController extends AppController
         //     $res = $query->first();
         // }
 
-        $connUrl = parse_url('http://localhost:7474/db/data/');
-        $user = 'neo4j';
-        $password = 'neo4jn30Aj';
 
         $client = ClientBuilder::create()
-                ->addConnection('default', $connUrl['scheme'], $connUrl['host'], $connUrl['port'], true, $user, $password)
-                ->setAutoFormatResponse(true)
+                ->addConnection('http', 'http://neo4j:neo4jn30Aj@localhost:7474')
                 ->build();
-        $query = 'MATCH (a {name:"ドナルド・トランプ"})-[*1..2]-(p) RETURN DISTINCT a,p';
-        $result = $client->sendCypherQuery($query)->getResult();
-        $user = $result->getSingleNode();
-        $name = $user->getProperty('name');
 
-        Log::write('debug', $user);
-        Log::write('debug', $name);
+        $query = 'MATCH (a {name:"ドナルド・トランプ"})-[*1..2]-(p) RETURN DISTINCT a,p';
+        $result = $client->run($query)->getRecords();
+        Log::write('debug', $result);
+
+
+
 
         $res = ['hoge' => 'hage'];
         $this->set('articles', $res);
