@@ -11,6 +11,7 @@ use Cake\Routing\Router;
 use App\Utils\U;
 
 use Neoxygen\NeoClient\ClientBuilder;
+use Cake\Log\Log;
 
 /**
  * Graph Controller
@@ -48,15 +49,23 @@ class GraphController extends AppController
         //     $res = $query->first();
         // }
 
-        $connUrl = parse_url('http://localhost:7687/db/data/');
+        $connUrl = parse_url('http://localhost:7474/db/data/');
         $user = 'neo4j';
         $password = 'neo4jn30Aj';
 
         $client = ClientBuilder::create()
                 ->addConnection('default', $connUrl['scheme'], $connUrl['host'], $connUrl['port'], true, $user, $password)
+                ->setAutoFormatResponse(true)
                 ->build();
         $query = 'MATCH (a {name:"眞弓聡"})-[*1..2]-(p) RETURN DISTINCT a,p';
         $result = $client->sendCypherQuery($query)->getResult();
+        $user = $result->getSingleNode();
+        $name = $user->getProperty('name');
+
+        Log::write('debug', 'aaa');
+        Log::write('debug', $user);
+        Log::write('debug', $name);
+        Log::write('debug', 'bbb');
 
         $res = ['hoge' => 'hage'];
         $this->set('articles', $res);
