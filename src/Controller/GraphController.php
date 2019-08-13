@@ -47,61 +47,48 @@ class GraphController extends AppController
             $res = $graph;
         }
         // Log::write('debug', $res);
-        
+
         $this->set('articles', $res);
         $this->set('_serialize', 'articles');
     }
 
-    public function privateName($name = null, $privacy = 1)
+    public function privateName($name = null, $privacy = \App\Controller\AppController::PRIVACY_PUBLIC)
     {
-        if (($this->Auth->user('role') !== 'admin') && ($privacy == 4)) {
+        if (($this->Auth->user('role') !== 'admin') && ($privacy == \App\Controller\AppController::PRIVACY_ADMIN)) {
             throw new NotFoundException(__('記事が見つかりません'));
         }
 
-        // $Subjects = TableRegistry::get('Subjects');
-      
-        // $query = $Subjects->find()->where($Subjects->wherePrivacyNameExplicitly($name, $privacy));
-        // if ($query->count() == 0) {
-        //     $res = ['status' => 0, 'message' => 'Not found'];
-        // } else {
-        //     $res = $query->first();
-        // }
-        $res = ['hoge' => 'hage'];
+        $graph = $this->_getOnesGraph($name, $privacy);
+        if (!$graph || count($graph) == 0) {
+            $res = ['status' => 0, 'message' => 'Not found'];
+        } else {
+            $res = $graph;
+        }
+        // Log::write('debug', $res);
+
         $this->set('articles', $res);
         $this->set('_serialize', 'articles');
     }
 
-    public function _getOnesGraph($name)
+    public function _getOnesGraph($name, $privacy_mode = \App\Controller\AppController::PRIVACY_PUBLIC)
     {
+        // build cypher query
+        $where = self::_wherePrivacy($privacy_mode, $this->Auth->user('id'));
+        $query = 'MATCH (subject {name: {name}})-[relation]-(object) '
+               .$where
+               .'RETURN DISTINCT subject, object, relation';
+        $parameter = ['name' => $name];
+
+        // connect to neo4j
         $client = ClientBuilder::create()
                 ->addConnection('http', 'http://neo4j:neo4jn30Aj@localhost:7474')
                 ->build();
 
-        // TODO: Testing Privacy modes
-
-        // Admin
-        // $query = 'MATCH (subject {name: {name}})-[relation]-(object) RETURN DISTINCT subject, object, relation';
-
-        // Only Public
-//         $query = 'MATCH (subject {name: {name}, is_private: false})-[relation]-(object {is_private: false}) RETURN DISTINCT subjec
-// t, object, relation';
-
-        // Only Private
-        // $query = 'MATCH (subject {name: {name}, is_private: true, user_id: 2})-[relation]-(object {is_private: true, user_id: 2}) RETURN DISTINCT subject, object, relation';
-
-        // All The User can see
-        $query = 'MATCH (subject {name: {name}})-[relation]-(object) '
-               .'WHERE ('
-               .'(subject.is_private = false OR subject.user_id = 2) AND '
-               .'(object.is_private = false OR object.user_id = 2) '
-               .') '
-               .'RETURN DISTINCT subject, object, relation';
-
-
-        $parameter = ['name' => $name];
+        // run cypher
         $result = $client->run($query, $parameter);
         if (!$result->records()) return false;
 
+        // format result array
         $subject = $result->getRecord()->value('subject');
         $ret = ['subject' => $this->_buildNodeArr($subject), 'relations' => []];
 
@@ -120,6 +107,25 @@ class GraphController extends AppController
         return $ret;
     }
 
+    public static function _wherePrivacy($privacy_mode, $user_id = 1)
+    {
+        if ($privacy_mode == \App\Controller\AppController::PRIVACY_PUBLIC) {
+            // Only Public
+            return 'WHERE subject.is_private = false AND object.is_private = false ';
+        } elseif ($privacy_mode == \App\Controller\AppController::PRIVACY_PRIVATE) {
+            // Only Private
+            return 'WHERE subject.is_private = true AND subject.user_id = '.$user_id.
+                   ' AND object.is_private = true AND object.user_id = '.$user_id. ' ';
+        } elseif ($privacy_mode == \App\Controller\AppController::PRIVACY_ALL) {
+            // All The User can see
+            return 'WHERE ('
+                .'(subject.is_private = false OR subject.user_id = '.$user_id.') AND '
+                .'(object.is_private = false OR object.user_id = '.$user_id.') '
+                .') ';
+        } elseif ($privacy_mode == \App\Controller\AppController::PRIVACY_ADMIN) {
+            return '';
+        }
+    }
     public function _getActiveNode($relation_record)
     {
         $obj = $this->_getGraphReturns($relation_record);
