@@ -54,8 +54,9 @@ class GraphController extends AppController
                 ->addConnection('http', 'http://neo4j:neo4jn30Aj@localhost:7474')
                 ->build();
 
-        $query = 'MATCH (a {name:"ドナルド・トランプ"})-[*1..2]-(p) RETURN DISTINCT a,p';
-        $result = $client->run($query)->getRecords();
+        $query = 'MATCH (active {name: {name}})-[*1..2]-(passive) RETURN DISTINCT active, passive';
+        $parameter = ['name' => 'ドナルド・トランプ'];
+        $result = $client->run($query, $parameter)->getRecords();
         Log::write('debug', $result);
 
 
