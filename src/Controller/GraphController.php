@@ -62,10 +62,8 @@ class GraphController extends AppController
         $user = $result->getSingleNode();
         $name = $user->getProperty('name');
 
-        Log::write('debug', 'aaa');
         Log::write('debug', $user);
         Log::write('debug', $name);
-        Log::write('debug', 'bbb');
 
         $res = ['hoge' => 'hage'];
         $this->set('articles', $res);
