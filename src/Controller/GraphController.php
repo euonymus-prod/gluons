@@ -58,7 +58,7 @@ class GraphController extends AppController
             throw new NotFoundException(__('記事が見つかりません'));
         }
 
-        $graph = $this->_getOnesGraph($name, $privacy);
+        $graph = $this->_getOnesGraph($name, $privacy, $this->Auth->user('id'));
         if (!$graph || count($graph) == 0) {
             $res = ['status' => 0, 'message' => 'Not found'];
         } else {
@@ -70,10 +70,12 @@ class GraphController extends AppController
         $this->set('_serialize', 'articles');
     }
 
-    public function _getOnesGraph($name, $privacy_mode = \App\Controller\AppController::PRIVACY_PUBLIC)
+    public function _getOnesGraph($name, $privacy_mode = \App\Controller\AppController::PRIVACY_PUBLIC, $user_id = null)
     {
+        if (($privacy_mode != \App\Controller\AppController::PRIVACY_PUBLIC) && is_null($user_id)) return false;
+
         // build cypher query
-        $where = self::_wherePrivacy($privacy_mode, $this->Auth->user('id'));
+        $where = self::_wherePrivacy($privacy_mode, $user_id);
         $query = 'MATCH (subject {name: {name}})-[relation]-(object) '
                .$where
                .'RETURN DISTINCT subject, object, relation';
