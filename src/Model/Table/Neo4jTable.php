@@ -59,6 +59,7 @@ class Neo4jTable extends AppTable
                .$where
                .'RETURN subject ORDER BY (CASE subject.created WHEN null THEN {} ELSE subject.created END) DESC limit 100';
         // NOTE: Null always comes the first, when Desc Order. So above the little bit of trick.
+        // https://github.com/opencypher/openCypher/issues/238
 
         // run cypher
         $result = $this->client->run($query);
