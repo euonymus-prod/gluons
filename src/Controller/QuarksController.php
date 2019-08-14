@@ -59,9 +59,9 @@ class QuarksController extends AppController
         $this->set('_serialize', 'articles');
     }
 
-    public function privateName($name = null, $privacy = 1)
+    public function privateName($name = null, $privacy = \App\Controller\AppController::PRIVACY_PUBLIC)
     {
-        if (($this->Auth->user('role') !== 'admin') && ($privacy == 4)) {
+        if (($this->Auth->user('role') !== 'admin') && ($privacy == \App\Controller\AppController::PRIVACY_ADMIN)) {
             throw new NotFoundException(__('記事が見つかりません'));
         }
 
@@ -103,9 +103,9 @@ class QuarksController extends AppController
     }
 
     // API endpoint:  /private_quarks/list
-    public function privateListview($privacy = 1)
+    public function privateListview($privacy = \App\Controller\AppController::PRIVACY_PUBLIC)
     {
-        if (($this->Auth->user('role') !== 'admin') && ($privacy == 4)) {
+        if (($this->Auth->user('role') !== 'admin') && ($privacy == \App\Controller\AppController::PRIVACY_ADMIN)) {
             throw new NotFoundException(__('記事が見つかりません'));
         }
 
@@ -198,7 +198,7 @@ class QuarksController extends AppController
         $this->set('_serialize', 'deleted');
     }
 
-    public function _list($privacy = 1)
+    public function _list($privacy = \App\Controller\AppController::PRIVACY_PUBLIC)
     {
         $Subjects = TableRegistry::get('Subjects');
       
@@ -241,7 +241,7 @@ class QuarksController extends AppController
         /* return $results; */
     }
 
-    public function _search($privacy = 1)
+    public function _search($privacy = \App\Controller\AppController::PRIVACY_PUBLIC)
     {
         if (!array_key_exists('keywords', $this->request->query)) {
             return [];
