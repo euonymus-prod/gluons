@@ -10,6 +10,8 @@ use Cake\Cache\Cache;
 use Cake\Routing\Router;
 use App\Utils\U;
 
+use Cake\Log\Log;
+
 /**
  * Quark Controller
  *
@@ -200,6 +202,13 @@ class QuarksController extends AppController
 
     public function _list($privacy = \App\Controller\AppController::PRIVACY_PUBLIC)
     {
+        $Neo4j = TableRegistry::get('Neo4j');
+        $quarks = $Neo4j::getQuarks($privacy, $this->Auth->user('id'));
+        return $quarks;
+
+
+
+        /*
         $Subjects = TableRegistry::get('Subjects');
       
         $where = [$Subjects->wherePrivacyExplicitly($privacy)];
@@ -233,6 +242,7 @@ class QuarksController extends AppController
         // generate query
         $query = $Subjects->find()->where($where)->order($order)->cache($cache_slag);
         return $this->paginate($query);
+        */
 
         /* if (($results = Cache::read($cache_slag, 'day')) === false) { */
         /*   $results = $this->paginate($Subjects); */

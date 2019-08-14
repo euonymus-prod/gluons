@@ -43,6 +43,34 @@ class Neo4jTable extends AppTable
     /****************************************************************************/
     /* Get Data                                                                 */
     /****************************************************************************/
+    public static function getQuarks($privacy_mode = \App\Controller\AppController::PRIVACY_PUBLIC, $user_id = null)
+    {
+        if (($privacy_mode != \App\Controller\AppController::PRIVACY_PUBLIC) && is_null($user_id)) return false;
+
+        // build cypher query
+        // $where = self::wherePrivacy($privacy_mode, $user_id);
+        $where = '';
+        $query = 'MATCH (subject)'
+               .$where
+               .'RETURN subject ORDER BY (CASE subject.created WHEN null THEN {} ELSE subject.created END) DESC limit 100';
+
+
+        // connect to neo4j
+        $client = ClientBuilder::create()
+                ->addConnection('http', 'http://neo4j:neo4jn30Aj@localhost:7474')
+                ->build();
+
+        // run cypher
+        $result = $client->run($query);
+
+        $ret = [];
+        foreach ($result->getRecords() as $key => $record) {
+            $ret[] = self::buildNodeArr($record->value('subject'));
+        }
+        // Log::write('debug', $ret);
+        return $ret;
+    }
+
     public static function getOnesGraph($name, $privacy_mode = \App\Controller\AppController::PRIVACY_PUBLIC, $user_id = null)
     {
         if (($privacy_mode != \App\Controller\AppController::PRIVACY_PUBLIC) && is_null($user_id)) return false;
