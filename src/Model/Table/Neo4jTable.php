@@ -54,8 +54,7 @@ class Neo4jTable extends AppTable
         if (($privacy_mode != \App\Controller\AppController::PRIVACY_PUBLIC) && is_null($user_id)) return false;
 
         // build cypher query
-        // $where = self::wherePrivacy($privacy_mode, $user_id);
-        $where = '';
+        $where = self::whereNodePrivacy($privacy_mode, $user_id);
         $query = 'MATCH (subject)'
                .$where
                .'RETURN subject ORDER BY (CASE subject.created WHEN null THEN {} ELSE subject.created END) DESC limit 100';
@@ -113,6 +112,22 @@ class Neo4jTable extends AppTable
     /*******************************************************/
     /* where                                               */
     /*******************************************************/
+    public static function whereNodePrivacy($privacy_mode, $user_id = 1)
+    {
+        if ($privacy_mode == \App\Controller\AppController::PRIVACY_PUBLIC) {
+            // Only Public
+            return 'WHERE subject.is_private = false ';
+        } elseif ($privacy_mode == \App\Controller\AppController::PRIVACY_PRIVATE) {
+            // Only Private
+            return 'WHERE subject.is_private = true AND subject.user_id = '.$user_id.' ';
+        } elseif ($privacy_mode == \App\Controller\AppController::PRIVACY_ALL) {
+            // All The User can see
+            return 'WHERE (subject.is_private = false OR subject.user_id = '.$user_id.') ';
+        } elseif ($privacy_mode == \App\Controller\AppController::PRIVACY_ADMIN) {
+            return '';
+        }
+    }
+        
     public static function wherePrivacy($privacy_mode, $user_id = 1)
     {
         if ($privacy_mode == \App\Controller\AppController::PRIVACY_PUBLIC) {
