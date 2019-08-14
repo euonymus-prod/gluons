@@ -34,6 +34,11 @@ class Neo4jTable extends AppTable
     public function initialize(array $config)
     {
         parent::initialize($config);
+
+        // connect to neo4j
+        $this->client = ClientBuilder::create()
+                      ->addConnection('http', 'http://neo4j:neo4jn30Aj@localhost:7474')
+                      ->build();
     }
 
     /****************************************************************************/
@@ -43,7 +48,8 @@ class Neo4jTable extends AppTable
     /****************************************************************************/
     /* Get Data                                                                 */
     /****************************************************************************/
-    public static function getQuarks($privacy_mode = \App\Controller\AppController::PRIVACY_PUBLIC, $user_id = null)
+    // TODO: Pagination, Privacy
+    public function getQuarks($privacy_mode = \App\Controller\AppController::PRIVACY_PUBLIC, $user_id = null)
     {
         if (($privacy_mode != \App\Controller\AppController::PRIVACY_PUBLIC) && is_null($user_id)) return false;
 
@@ -53,15 +59,10 @@ class Neo4jTable extends AppTable
         $query = 'MATCH (subject)'
                .$where
                .'RETURN subject ORDER BY (CASE subject.created WHEN null THEN {} ELSE subject.created END) DESC limit 100';
-
-
-        // connect to neo4j
-        $client = ClientBuilder::create()
-                ->addConnection('http', 'http://neo4j:neo4jn30Aj@localhost:7474')
-                ->build();
+        // NOTE: Null always comes the first, when Desc Order. So above the little bit of trick.
 
         // run cypher
-        $result = $client->run($query);
+        $result = $this->client->run($query);
 
         $ret = [];
         foreach ($result->getRecords() as $key => $record) {
@@ -71,7 +72,7 @@ class Neo4jTable extends AppTable
         return $ret;
     }
 
-    public static function getOnesGraph($name, $privacy_mode = \App\Controller\AppController::PRIVACY_PUBLIC, $user_id = null)
+    public function getOnesGraph($name, $privacy_mode = \App\Controller\AppController::PRIVACY_PUBLIC, $user_id = null)
     {
         if (($privacy_mode != \App\Controller\AppController::PRIVACY_PUBLIC) && is_null($user_id)) return false;
 
@@ -82,13 +83,8 @@ class Neo4jTable extends AppTable
                .'RETURN DISTINCT subject, object, relation';
         $parameter = ['name' => $name];
 
-        // connect to neo4j
-        $client = ClientBuilder::create()
-                ->addConnection('http', 'http://neo4j:neo4jn30Aj@localhost:7474')
-                ->build();
-
         // run cypher
-        $result = $client->run($query, $parameter);
+        $result = $this->client->run($query, $parameter);
         if (!$result->records()) return false;
 
         // format result array

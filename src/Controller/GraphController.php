@@ -40,7 +40,7 @@ class GraphController extends AppController
     public function name($name = null)
     {
         $Neo4j = TableRegistry::get('Neo4j');
-        $graph = $Neo4j::getOnesGraph($name);
+        $graph = $Neo4j->getOnesGraph($name);
         if (!$graph || count($graph) == 0) {
             $res = ['status' => 0, 'message' => 'Not found'];
         } else {
@@ -59,7 +59,7 @@ class GraphController extends AppController
         }
 
         $Neo4j = TableRegistry::get('Neo4j');
-        $graph = $Neo4j::getOnesGraph($name, $privacy, $this->Auth->user('id'));
+        $graph = $Neo4j->getOnesGraph($name, $privacy, $this->Auth->user('id'));
         if (!$graph || count($graph) == 0) {
             $res = ['status' => 0, 'message' => 'Not found'];
         } else {

@@ -203,7 +203,7 @@ class QuarksController extends AppController
     public function _list($privacy = \App\Controller\AppController::PRIVACY_PUBLIC)
     {
         $Neo4j = TableRegistry::get('Neo4j');
-        $quarks = $Neo4j::getQuarks($privacy, $this->Auth->user('id'));
+        $quarks = $Neo4j->getQuarks($privacy, $this->Auth->user('id'));
         return $quarks;
 
 
