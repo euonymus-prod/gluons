@@ -202,8 +202,19 @@ class QuarksController extends AppController
 
     public function _list($privacy = \App\Controller\AppController::PRIVACY_PUBLIC)
     {
+        // TODO: Pagination
+        // /src/Template/json/list.ctp
+        // 以下の設定をマニュアル操作する方法を探す。
+        // $pagination['has_next'] =  $this->Paginator->hasNext();
+        // $pagination['has_prev'] =  $this->Paginator->hasPrev();
+        // $pagination['current_page']  =  (int)$this->Paginator->current();
+
+        $page = 1;
+        if (array_key_exists('page', $this->request->query)) {
+            $page = $this->request->query['page'];
+        }
         $Neo4j = TableRegistry::get('Neo4j');
-        $quarks = $Neo4j->getQuarks($privacy, $this->Auth->user('id'));
+        $quarks = $Neo4j->getQuarks($page, $privacy, $this->Auth->user('id'));
         return $quarks;
 
 

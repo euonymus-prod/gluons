@@ -25,6 +25,7 @@ use GraphAware\Neo4j\Client\ClientBuilder;
  */
 class Neo4jTable extends AppTable
 {
+    const RECORD_PER_PAGE = 100;
     /**
      * Initialize method
      *
@@ -48,16 +49,17 @@ class Neo4jTable extends AppTable
     /****************************************************************************/
     /* Get Data                                                                 */
     /****************************************************************************/
-    // TODO: Pagination, Privacy
-    public function getQuarks($privacy_mode = \App\Controller\AppController::PRIVACY_PUBLIC, $user_id = null)
+    public function getQuarks($page, $privacy_mode = \App\Controller\AppController::PRIVACY_PUBLIC, $user_id = null)
     {
         if (($privacy_mode != \App\Controller\AppController::PRIVACY_PUBLIC) && is_null($user_id)) return false;
 
         // build cypher query
+        $skip = self::RECORD_PER_PAGE * ($page - 1);
+        Log::write('debug', $page);
         $where = self::whereNodePrivacy($privacy_mode, $user_id);
         $query = 'MATCH (subject)'
                .$where
-               .'RETURN subject ORDER BY (CASE subject.created WHEN null THEN {} ELSE subject.created END) DESC limit 100';
+               .'RETURN subject ORDER BY (CASE subject.created WHEN null THEN {} ELSE subject.created END) DESC SKIP '. $skip.' LIMIT '.self::RECORD_PER_PAGE;
         // NOTE: Null always comes the first, when Desc Order. So above the little bit of trick.
         // https://github.com/opencypher/openCypher/issues/238
 
