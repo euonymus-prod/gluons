@@ -55,9 +55,8 @@ class Neo4jTable extends AppTable
 
         // build cypher query
         $skip = self::RECORD_PER_PAGE * ($page - 1);
-        Log::write('debug', $page);
         $where = self::whereNodePrivacy($privacy_mode, $user_id);
-        $query = 'MATCH (subject)'
+        $query = 'MATCH (subject) '
                .$where
                .'RETURN subject ORDER BY (CASE subject.created WHEN null THEN {} ELSE subject.created END) DESC SKIP '. $skip.' LIMIT '.self::RECORD_PER_PAGE;
         // NOTE: Null always comes the first, when Desc Order. So above the little bit of trick.
@@ -65,6 +64,32 @@ class Neo4jTable extends AppTable
 
         // run cypher
         $result = $this->client->run($query);
+
+        $ret = [];
+        foreach ($result->getRecords() as $key => $record) {
+            $ret[] = self::buildNodeArr($record->value('subject'));
+        }
+        // Log::write('debug', $ret);
+        return $ret;
+    }
+
+    public function searchQuarks($search_words, $page, $privacy_mode = \App\Controller\AppController::PRIVACY_PUBLIC, $user_id = null)
+    {
+        if (($privacy_mode != \App\Controller\AppController::PRIVACY_PUBLIC) && is_null($user_id)) return false;
+
+        // build cypher query
+        $skip = self::RECORD_PER_PAGE * ($page - 1);
+        $where = self::whereNodePrivacy($privacy_mode, $user_id, 'node');
+        $query = 'CALL db.index.fulltext.queryNodes("nameAndDescription", {search_words}) YIELD node '
+               .$where
+               .'RETURN node as subject SKIP '. $skip.' LIMIT '.self::RECORD_PER_PAGE;
+        $parameter = ['search_words' => $search_words];
+        Log::write('debug',$query);
+
+        // run cypher
+        $result = $this->client->run($query, $parameter);
+        Log::write('debug',$result);
+        
 
         $ret = [];
         foreach ($result->getRecords() as $key => $record) {
@@ -115,17 +140,17 @@ class Neo4jTable extends AppTable
     /*******************************************************/
     /* where                                               */
     /*******************************************************/
-    public static function whereNodePrivacy($privacy_mode, $user_id = 1)
+    public static function whereNodePrivacy($privacy_mode, $user_id = 1, $node_name = 'subject')
     {
         if ($privacy_mode == \App\Controller\AppController::PRIVACY_PUBLIC) {
             // Only Public
-            return 'WHERE subject.is_private = false ';
+            return 'WHERE '.$node_name.'.is_private = false ';
         } elseif ($privacy_mode == \App\Controller\AppController::PRIVACY_PRIVATE) {
             // Only Private
-            return 'WHERE subject.is_private = true AND subject.user_id = '.$user_id.' ';
+            return 'WHERE '.$node_name.'.is_private = true AND '.$node_name.'.user_id = '.$user_id.' ';
         } elseif ($privacy_mode == \App\Controller\AppController::PRIVACY_ALL) {
             // All The User can see
-            return 'WHERE (subject.is_private = false OR subject.user_id = '.$user_id.') ';
+            return 'WHERE ('.$node_name.'.is_private = false OR '.$node_name.'.user_id = '.$user_id.') ';
         } elseif ($privacy_mode == \App\Controller\AppController::PRIVACY_ADMIN) {
             return '';
         }
