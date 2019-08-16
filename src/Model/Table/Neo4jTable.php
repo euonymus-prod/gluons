@@ -249,11 +249,18 @@ __EOD__;
 
 
         // TODO: 最初に quark_type_id の変更があるかどうかをチェック（Labelの更新が必要になる)
+        $label = false;
+        if (array_key_exists('quark_type_id', $data) && !empty($data['quark_type_id']))
+            $label = self::getLabel($data['quark_type_id']);
+
+
+
 
         Log::write('debug', $data);
+
+
+
         // if (!array_key_exists('name', $data) || empty($data['name'])) return false;
-        // if (!array_key_exists('quark_type_id', $data) || empty($data['quark_type_id']))
-        //     $data['quark_type_id'] = QuarkTypesTable::TYPE_THING;
 
         // // build cypher query
         // $label = self::getLabel($data['quark_type_id']);
@@ -403,6 +410,7 @@ __EOD__;
     public static function getLabel($quark_type_id)
     {
         $QuarkTypes = TableRegistry::get('QuarkTypes');
+        // NOTE: Model->get($id) Issues Exception when there is not. So I don't check existance of name
         $quark_type = $QuarkTypes->get($quark_type_id);
         return $quark_type->name;
     }
