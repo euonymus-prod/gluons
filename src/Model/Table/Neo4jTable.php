@@ -84,11 +84,11 @@ class Neo4jTable extends AppTable
                .$where
                .'RETURN node as subject SKIP '. $skip.' LIMIT '.self::RECORD_PER_PAGE;
         $parameter = ['search_words' => $search_words];
-        Log::write('debug',$query);
+        // Log::write('debug',$query);
 
         // run cypher
         $result = $this->client->run($query, $parameter);
-        Log::write('debug',$result);
+        // Log::write('debug',$result);
         
 
         $ret = [];
