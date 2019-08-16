@@ -178,6 +178,17 @@ class QuarksController extends AppController
     public function edit($id = null)
     {
         $res = ['status' => 0, 'message' => 'Not accepted'];
+
+        $Neo4j = TableRegistry::get('Neo4j');
+        if ($this->request->is(['patch'])) {
+            $graph = $Neo4j->editQuark($id, $this->request->data, $this->Auth->user('id'));
+        } else {
+            $res['message'] = 'Invalid';
+        }
+
+
+
+/*
         $Subjects = TableRegistry::get('Subjects');
         $subject = $Subjects->findById($id);
         if ($this->request->is(['patch']) && ($subject->count() == 1)) {
@@ -196,6 +207,7 @@ class QuarksController extends AppController
         } else {
             $res['message'] = 'Invalid';
         }
+*/
         $this->set('newQuark', $res);
         $this->set('_serialize', 'newQuark');
     }

@@ -92,10 +92,6 @@ __EOD__;
     }
 
     /****************************************************************************/
-    /* Edit Data                                                                */
-    /****************************************************************************/
-
-    /****************************************************************************/
     /* Get Data                                                                 */
     /****************************************************************************/
     public function getNode($id)
@@ -240,6 +236,44 @@ __EOD__;
         // run cypher
         return $this->client->run($query);
     }
+
+    /*******************************************************/
+    /* Edit Data                                           */
+    /*******************************************************/
+    public function editQuark($id, $data, $user_id)
+    {
+        // existence check
+        $node = $this->getNode($id);
+        if (!$node) return false;
+        Log::write('debug', 'updating: ' . $node['values']['name']);
+
+
+        // TODO: 最初に quark_type_id の変更があるかどうかをチェック（Labelの更新が必要になる)
+
+        Log::write('debug', $data);
+        // if (!array_key_exists('name', $data) || empty($data['name'])) return false;
+        // if (!array_key_exists('quark_type_id', $data) || empty($data['quark_type_id']))
+        //     $data['quark_type_id'] = QuarkTypesTable::TYPE_THING;
+
+        // // build cypher query
+        // $label = self::getLabel($data['quark_type_id']);
+        // $query = str_replace('[NODE_LABEL]', $label, self::CYPHER_CREATE_QUARK);
+
+        // // Format Properties
+        // $parameters = self::formatQuarkParameters($data, $user_id);
+
+
+
+
+
+
+        // // build delete cypher query
+        // $query = 'MATCH (n) WHERE ID(n) = '.$id.' DETACH DELETE n';
+
+        // // run cypher
+        // return $this->client->run($query);
+    }
+
 
     /*******************************************************/
     /* where                                               */
