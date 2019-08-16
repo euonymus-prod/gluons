@@ -347,8 +347,6 @@ __EOD__;
         $query = 'MATCH (n:'.$old_label.') WHERE ID(n) = '.$id
                .$update_label_pre.' SET n += '.$update_snippet .' '.$update_label_post. ' RETURN n';
 
-        Log::write('debug', $query);
-
         // run cypher
         Log::write('debug', 'updating: ' . $node['values']['name']);
         $result = $this->client->run($query, $parameters);
