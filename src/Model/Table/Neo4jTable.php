@@ -73,7 +73,13 @@ SET
 RETURN n
 __EOD__;
 
+    const QUARK_BOOL_PROPERTIES = ['is_momentary', 'is_private', 'is_exclusive'];
+    const QUARK_STR_PROPERTIES = ['name', 'image_path', 'description', 'start_accuracy', 'end_accuracy', 'url', 'affiliate'];
+    const QUARK_INT_PROPERTIES = ['quark_type_id', 'user_id', 'last_modified_user'];
+    const QUARK_DATETIME_PROPERTIES = ['start', 'end', 'modified', 'created'];
+
     const NEO4J_DATETIME_FORMAT = 'Y-m-d\TH:i:s+0900';
+
     const RECORD_PER_PAGE = 100;
     /**
      * Initialize method
@@ -94,6 +100,19 @@ __EOD__;
     /****************************************************************************/
     /* Get Data                                                                 */
     /****************************************************************************/
+    public function getNodeUserCanSee($id, $user_id)
+    {
+        if (!is_numeric($id)) return false;
+        $where = self::whereNodePrivacy(\App\Controller\AppController::PRIVACY_ALL, $user_id, 'n');
+        $query = 'MATCH (n) WHERE ID(n) = '.$id
+               .(empty($where) ? '' : ' AND ' .$where)
+               .' RETURN n';
+
+        // run cypher
+        $result = $this->client->run($query);
+        if (count($result->records()) === 0) return false;
+        return self::buildNodeArr($result->getRecord()->value('n'));
+    }
     public function getNode($id)
     {
         if (!is_numeric($id)) return false;
@@ -125,7 +144,7 @@ __EOD__;
         $skip = self::RECORD_PER_PAGE * ($page - 1);
         $where = self::whereNodePrivacy($privacy_mode, $user_id);
         $query = 'MATCH (subject) '
-               .$where
+               .(empty($where) ? '' : 'WHERE ' .$where)
                .'RETURN subject ORDER BY (CASE subject.created WHEN null THEN {} ELSE subject.created END) DESC SKIP '. $skip.' LIMIT '.self::RECORD_PER_PAGE;
         // NOTE: Null always comes the first, when Desc Order. So above the little bit of trick.
         // https://github.com/opencypher/openCypher/issues/238
@@ -149,7 +168,7 @@ __EOD__;
         $skip = self::RECORD_PER_PAGE * ($page - 1);
         $where = self::whereNodePrivacy($privacy_mode, $user_id, 'node');
         $query = 'CALL db.index.fulltext.queryNodes("nameAndDescription", {search_words}) YIELD node '
-               .$where
+               .(empty($where) ? '' : 'WHERE ' .$where)
                .'RETURN node as subject SKIP '. $skip.' LIMIT '.self::RECORD_PER_PAGE;
         $parameters = ['search_words' => $search_words];
         // Log::write('debug',$query);
@@ -174,7 +193,7 @@ __EOD__;
         // build cypher query
         $where = self::wherePrivacy($privacy_mode, $user_id);
         $query = 'MATCH (subject {name: {name}})-[relation]-(object) '
-               .$where
+               .(empty($where) ? '' : 'WHERE ' .$where)
                .'RETURN DISTINCT subject, object, relation';
         $parameters = ['name' => $name];
 
@@ -206,17 +225,14 @@ __EOD__;
     /*******************************************************/
     public function saveQuark($data, $user_id)
     {
-        if (!array_key_exists('name', $data) || empty($data['name'])) return false;
-        if (!array_key_exists('quark_type_id', $data) || empty($data['quark_type_id']))
-            $data['quark_type_id'] = QuarkTypesTable::TYPE_THING;
+        // Format Properties
+        $parameters = self::formatQuarkParameters($data, $user_id);
+        if (!$parameters) return false;
+        // Log::write('debug', var_dump($parameters));
 
         // build cypher query
         $label = self::getLabel($data['quark_type_id']);
         $query = str_replace('[NODE_LABEL]', $label, self::CYPHER_CREATE_QUARK);
-
-        // Format Properties
-        $parameters = self::formatQuarkParameters($data, $user_id);
-        // Log::write('debug', var_dump($parameters));
 
         // run cypher
         $result = $this->client->run($query, $parameters);
@@ -240,45 +256,104 @@ __EOD__;
     /*******************************************************/
     /* Edit Data                                           */
     /*******************************************************/
+    /*
+      Sample Cypher
+      -------------------------
+      MATCH (n:CreativeWork)
+      WHERE ID(n) = 124720
+      REMOVE n:CreativeWork
+      SET n += {
+          name: {name},
+          image_path: {image_path},
+          description: {description},
+          start: datetime( {start} ),
+          end: datetime( {end} ),
+          start_accuracy: {start_accuracy},
+          end_accuracy: {end_accuracy},
+          is_momentary: {is_momentary},
+          url: {url},
+          affiliate: {affiliate},
+          quark_type_id: {quark_type_id},
+          is_private: {is_private},
+          is_exclusive: {is_exclusive},
+          last_modified_user: {last_modified_user},
+          modified: datetime( {modified} ) 
+        } ,
+        n:Article 
+      RETURN n
+      -------------------------
+     */
     public function editQuark($id, $data, $user_id)
     {
+        // NOTE: name自体が存在しないのは許容。nameがemptyは不可。
+        if (array_key_exists('name', $data) && empty($data['name'])) return false;
+
         // existence check
         $node = $this->getNode($id);
         if (!$node) return false;
-        Log::write('debug', 'updating: ' . $node['values']['name']);
+
+        // Common properties
+        $data['last_modified_user'] = $user_id;
+        $data['modified'] = date(self::NEO4J_DATETIME_FORMAT, time());
+        
+        $snippets = [];
+        $parameters = [];
+        foreach($data as $key => $val) {
+            $func_pre = '';
+            $func_post = '';
+            // NOTE: U::trimSpace only accept strings. If int is given, this will be broken.
+            $val = U::trimSpace((string)$val);
+            if (in_array($key, self::QUARK_BOOL_PROPERTIES)) {
+                if (($val != 0) && ($val != 1)) return false;
+                $parameters[$key] = ($val == 0) ? false : true;
+            } elseif (in_array($key, self::QUARK_INT_PROPERTIES)) {
+                if (!is_numeric($val)) return false;
+                $parameters[$key] = (int) $val;
+            } elseif (in_array($key, self::QUARK_STR_PROPERTIES)) {
+                $parameters[$key] = empty($val) ? NULL : $val;
+            } elseif (in_array($key, self::QUARK_DATETIME_PROPERTIES)) {
+                if (empty($val)) {
+                    $parameters[$key] = NULL;
+                } else {
+                    $func_pre = 'datetime( ';
+                    $func_post = ' )';
+                    $parameters[$key] = self::strToFormattedDateTime($val);
+                }
+            } else {
+                continue;
+            }
+            $snippets[] = $key . ': '.$func_pre.'{' . $key . '}'.$func_post;
+        }
 
 
-        // TODO: 最初に quark_type_id の変更があるかどうかをチェック（Labelの更新が必要になる)
+        $update_snippet = '{ ' . implode(', ',$snippets) . ' }';
+
+        // NOTE: quark_type_id の変更があるかどうかをチェック（あれば、Labelの更新が必要になる)
         $label = false;
-        if (array_key_exists('quark_type_id', $data) && !empty($data['quark_type_id']))
-            $label = self::getLabel($data['quark_type_id']);
+        $old_label = self::getLabel($node['values']['quark_type_id']);
+        if (array_key_exists('quark_type_id', $data) && !empty($data['quark_type_id'])) {
+            if ((int)$node['values']['quark_type_id'] != (int)$data['quark_type_id']) {
+                $label = self::getLabel($data['quark_type_id']);
+            }
+        }
 
+        // build update cypher query
+        $update_label_pre = '';        
+        $update_label_post = '';        
+        if ($label) {
+            $update_label_pre = ' REMOVE n:'.$old_label;
+            $update_label_post = ', n:'.$label;
+        }
+        $query = 'MATCH (n:'.$old_label.') WHERE ID(n) = '.$id
+               .$update_label_pre.' SET n += '.$update_snippet .' '.$update_label_post. ' RETURN n';
 
+        Log::write('debug', $query);
 
-
-        Log::write('debug', $data);
-
-
-
-        // if (!array_key_exists('name', $data) || empty($data['name'])) return false;
-
-        // // build cypher query
-        // $label = self::getLabel($data['quark_type_id']);
-        // $query = str_replace('[NODE_LABEL]', $label, self::CYPHER_CREATE_QUARK);
-
-        // // Format Properties
-        // $parameters = self::formatQuarkParameters($data, $user_id);
-
-
-
-
-
-
-        // // build delete cypher query
-        // $query = 'MATCH (n) WHERE ID(n) = '.$id.' DETACH DELETE n';
-
-        // // run cypher
-        // return $this->client->run($query);
+        // run cypher
+        Log::write('debug', 'updating: ' . $node['values']['name']);
+        $result = $this->client->run($query, $parameters);
+        if (count($result->records()) === 0) return false;
+        return self::buildNodeArr($result->getRecord()->value('n'));
     }
 
 
@@ -289,13 +364,13 @@ __EOD__;
     {
         if ($privacy_mode == \App\Controller\AppController::PRIVACY_PUBLIC) {
             // Only Public
-            return 'WHERE '.$node_name.'.is_private = false ';
+            return ' ('.$node_name.'.is_private = false) ';
         } elseif ($privacy_mode == \App\Controller\AppController::PRIVACY_PRIVATE) {
             // Only Private
-            return 'WHERE '.$node_name.'.is_private = true AND '.$node_name.'.user_id = '.$user_id.' ';
+            return ' ('.$node_name.'.is_private = true AND '.$node_name.'.user_id = '.$user_id.') ';
         } elseif ($privacy_mode == \App\Controller\AppController::PRIVACY_ALL) {
             // All The User can see
-            return 'WHERE ('.$node_name.'.is_private = false OR '.$node_name.'.user_id = '.$user_id.') ';
+            return ' ('.$node_name.'.is_private = false OR '.$node_name.'.user_id = '.$user_id.') ';
         } elseif ($privacy_mode == \App\Controller\AppController::PRIVACY_ADMIN) {
             return '';
         }
@@ -305,14 +380,14 @@ __EOD__;
     {
         if ($privacy_mode == \App\Controller\AppController::PRIVACY_PUBLIC) {
             // Only Public
-            return 'WHERE subject.is_private = false AND object.is_private = false ';
+            return ' subject.is_private = false AND object.is_private = false ';
         } elseif ($privacy_mode == \App\Controller\AppController::PRIVACY_PRIVATE) {
             // Only Private
-            return 'WHERE subject.is_private = true AND subject.user_id = '.$user_id.
+            return ' subject.is_private = true AND subject.user_id = '.$user_id.
                    ' AND object.is_private = true AND object.user_id = '.$user_id. ' ';
         } elseif ($privacy_mode == \App\Controller\AppController::PRIVACY_ALL) {
             // All The User can see
-            return 'WHERE ('
+            return ' ('
                 .'(subject.is_private = false OR subject.user_id = '.$user_id.') AND '
                 .'(object.is_private = false OR object.user_id = '.$user_id.') '
                 .') ';
@@ -338,13 +413,10 @@ __EOD__;
     public static function addImageBySearch($data)
     {
         if (array_key_exists('image_path', $data) && !empty($data['image_path'])) return $data;
-        if (!array_key_exists('name', $data) || empty($data['name'])) return $data;
-
-        $QuarkTypes = TableRegistry::get('QuarkTypes');
-
         if (!array_key_exists('quark_type_id', $data) || empty($data['quark_type_id']))
             $data['quark_type_id'] = QuarkTypesTable::TYPE_THING;
 
+        $QuarkTypes = TableRegistry::get('QuarkTypes');
         $quark_type = $QuarkTypes->get($data['quark_type_id']);
         $data['image_path'] = $quark_type->image_path;
         return $data;
@@ -356,11 +428,15 @@ __EOD__;
         }
         return $data;
     }
+    public static function strToFormattedDateTime($str)
+    {
+        $time = strtotime($str);
+        return date(self::NEO4J_DATETIME_FORMAT, $time);
+    }
     public static function addDateTimeProperty($data, $key)
     {
         if (array_key_exists($key, $data) && !empty($data[$key])) {
-            $time = strtotime($data[$key]);
-            $data[$key] = date(self::NEO4J_DATETIME_FORMAT, $time);
+            $data[$key] = self::strToFormattedDateTime($data[$key]);
         } else {
             $data[$key] = null;
         }
@@ -377,6 +453,10 @@ __EOD__;
     }
     public static function formatQuarkParameters($data, $user_id)
     {
+        if (!array_key_exists('name', $data) || empty($data['name'])) return false;
+        if (!array_key_exists('quark_type_id', $data) || empty($data['quark_type_id']))
+            $data['quark_type_id'] = QuarkTypesTable::TYPE_THING;
+
         $data['id'] = self::buildGuid();
         $data['user_id'] = $user_id;
         $data['last_modified_user'] = $user_id;
@@ -385,10 +465,10 @@ __EOD__;
         $data = self::addDateTimeProperty($data, 'start');
         $data = self::addDateTimeProperty($data, 'end');
 
-        foreach (['description', 'start_accuracy', 'end_accuracy', 'url', 'affiliate'] as $property) {
+        foreach (self::QUARK_STR_PROPERTIES as $property) {
             $data = self::addTextProperty($data, $property);
         }
-        foreach (['is_momentary', 'is_private', 'is_exclusive'] as $property) {
+        foreach (self::QUARK_BOOL_PROPERTIES as $property) {
             $data = self::addBoolProperty($data, $property);
         }
 

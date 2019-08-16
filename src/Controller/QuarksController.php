@@ -81,10 +81,19 @@ class QuarksController extends AppController
 
     public function one($id = null)
     {
+        $Neo4j = TableRegistry::get('Neo4j');
+
+        $graph = $Neo4j->getNodeUserCanSee($id, $this->Auth->user('id'));
+        $this->set('articles', $graph);
+
+        /*
         $Subjects = TableRegistry::get('Subjects');
       
         $query = $Subjects->findById($id);
+
         $this->set('articles', $query->first());
+        */
+
         $this->set('_serialize', 'articles');
     }
 
@@ -182,6 +191,13 @@ class QuarksController extends AppController
         $Neo4j = TableRegistry::get('Neo4j');
         if ($this->request->is(['patch'])) {
             $graph = $Neo4j->editQuark($id, $this->request->data, $this->Auth->user('id'));
+            if ($graph) {
+                $res['status'] = 1;
+                $res['message'] = 'The quark has been saved.';
+                $res['result'] = $graph;
+            } else {
+                $res['message'] = 'The quark could not be saved. Please, try again.';
+            }
         } else {
             $res['message'] = 'Invalid';
         }
