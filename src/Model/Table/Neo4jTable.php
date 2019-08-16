@@ -98,6 +98,16 @@ __EOD__;
     /****************************************************************************/
     /* Get Data                                                                 */
     /****************************************************************************/
+    public function getNode($id)
+    {
+        if (!is_numeric($id)) return false;
+        $query = 'MATCH (n) WHERE ID(n) = '.$id.' RETURN n';
+
+        // run cypher
+        $result = $this->client->run($query);
+        if (count($result->records()) === 0) return false;
+        return self::buildNodeArr($result->getRecord()->value('n'));
+    }
     public function getByName($name)
     {
         // build cypher query
@@ -219,14 +229,10 @@ __EOD__;
     }
     public function deleteNode($id)
     {
-        // build existence check cypher query
-        if (!is_numeric($id)) return false;
-        $check_query = 'MATCH (n) WHERE ID(n) = '.$id.' RETURN n';
-
-        // run cypher
-        $result = $this->client->run($check_query);
-        if (count($result->records()) === 0) return false;
-        Log::write('debug', 'deleting: ' . self::buildNodeArr($result->getRecord()->value('n'))['values']['name']);
+        // existence check
+        $node = $this->getNode($id);
+        if (!$node) return false;
+        Log::write('debug', 'deleting: ' . $node['values']['name']);
 
         // build delete cypher query
         $query = 'MATCH (n) WHERE ID(n) = '.$id.' DETACH DELETE n';
