@@ -98,42 +98,6 @@ __EOD__;
     /****************************************************************************/
     /* Get Data                                                                 */
     /****************************************************************************/
-    public function saveQuark($data, $user_id)
-    {
-        if (!array_key_exists('name', $data) || empty($data['name'])) return false;
-        if (!array_key_exists('quark_type_id', $data) || empty($data['quark_type_id']))
-            $data['quark_type_id'] = QuarkTypesTable::TYPE_THING;
-
-        // build cypher query
-        $label = self::getLabel($data['quark_type_id']);
-        $query = str_replace('[NODE_LABEL]', $label, self::CYPHER_CREATE_QUARK);
-
-        // Format Properties
-        $parameters = self::formatQuarkParameters($data, $user_id);
-        // Log::write('debug', var_dump($parameters));
-
-        // run cypher
-        $result = $this->client->run($query, $parameters);
-        if (count($result->records()) === 0) return false;
-        return self::buildNodeArr($result->getRecord()->value('n'));
-    }
-    public function deleteNode($id)
-    {
-        // build existence check cypher query
-        if (!is_numeric($id)) return false;
-        $check_query = 'MATCH (n) WHERE ID(n) = '.$id.' RETURN n';
-
-        // run cypher
-        $result = $this->client->run($check_query);
-        if (count($result->records()) === 0) return false;
-        Log::write('debug', 'deleting: ' . self::buildNodeArr($result->getRecord()->value('n'))['values']['name']);
-
-        // build delete cypher query
-        $query = 'MATCH (n) WHERE ID(n) = '.$id.' DETACH DELETE n';
-
-        // run cypher
-        return $this->client->run($query);
-    }
     public function getByName($name)
     {
         // build cypher query
@@ -234,6 +198,42 @@ __EOD__;
     /*******************************************************/
     /* Save Data                                           */
     /*******************************************************/
+    public function saveQuark($data, $user_id)
+    {
+        if (!array_key_exists('name', $data) || empty($data['name'])) return false;
+        if (!array_key_exists('quark_type_id', $data) || empty($data['quark_type_id']))
+            $data['quark_type_id'] = QuarkTypesTable::TYPE_THING;
+
+        // build cypher query
+        $label = self::getLabel($data['quark_type_id']);
+        $query = str_replace('[NODE_LABEL]', $label, self::CYPHER_CREATE_QUARK);
+
+        // Format Properties
+        $parameters = self::formatQuarkParameters($data, $user_id);
+        // Log::write('debug', var_dump($parameters));
+
+        // run cypher
+        $result = $this->client->run($query, $parameters);
+        if (count($result->records()) === 0) return false;
+        return self::buildNodeArr($result->getRecord()->value('n'));
+    }
+    public function deleteNode($id)
+    {
+        // build existence check cypher query
+        if (!is_numeric($id)) return false;
+        $check_query = 'MATCH (n) WHERE ID(n) = '.$id.' RETURN n';
+
+        // run cypher
+        $result = $this->client->run($check_query);
+        if (count($result->records()) === 0) return false;
+        Log::write('debug', 'deleting: ' . self::buildNodeArr($result->getRecord()->value('n'))['values']['name']);
+
+        // build delete cypher query
+        $query = 'MATCH (n) WHERE ID(n) = '.$id.' DETACH DELETE n';
+
+        // run cypher
+        return $this->client->run($query);
+    }
 
     /*******************************************************/
     /* where                                               */
