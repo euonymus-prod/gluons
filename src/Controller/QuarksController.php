@@ -128,6 +128,23 @@ class QuarksController extends AppController
 
         // Existence check
         if ($this->request->is('post') && array_key_exists('name', $this->request->data)) {
+            $Neo4j = TableRegistry::get('Neo4j');
+            $graph = $Neo4j->getByName($this->request->data['name']);
+            if ($graph) {
+                // $res['results'] = $graph;
+                $res['message'] = 'The user already exists';
+            } else {
+                $graph = $Neo4j->saveQuark($this->request->data, $this->Auth->user('id'));
+                if ($graph) {
+                    $res['status'] = 1;
+                    $res['message'] = 'The quark has been saved.';
+                    $res['result'] = $graph;
+                } else {
+                    $res['message'] = 'The quark could not be saved. Please, try again.';
+                }
+            }
+
+/*
             $Subjects = TableRegistry::get('Subjects');
             $query = $Subjects->findByName($this->request->data['name']);
             if (iterator_count($query)) {
@@ -150,7 +167,9 @@ class QuarksController extends AppController
                     $res['result'] = $savedSubject;
                 }
             }
+*/
         }
+
         $this->set('newQuark', $res);
         $this->set('_serialize', 'newQuark');
     }
@@ -186,6 +205,19 @@ class QuarksController extends AppController
         $res = ['status' => 0, 'message' => 'Not accepted'];
 
         $this->request->allowMethod(['delete']);
+
+        // Existence check
+        $Neo4j = TableRegistry::get('Neo4j');
+        $graph = $Neo4j->deleteNode($id);
+        if ($graph) {
+            $res['status'] = 1;
+            $res['message'] = 'The quark has been deleted.';
+        } else {
+            $res['message'] = 'The quark could not be deleted. Please, try again.';
+        }
+
+
+/*
         $Subjects = TableRegistry::get('Subjects');
         $subject = $Subjects->get($id);
 
@@ -196,6 +228,7 @@ class QuarksController extends AppController
         } else {
             $res['message'] = 'The quark could not be deleted. Please, try again.';
         }
+*/
         $this->set('deleted', $res);
         $this->set('_serialize', 'deleted');
     }

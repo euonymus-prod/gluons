@@ -25,6 +25,55 @@ use GraphAware\Neo4j\Client\ClientBuilder;
  */
 class Neo4jTable extends AppTable
 {
+    const CYPHER_CREATE_QUARK =<<<__EOD__
+CREATE (n:[NODE_LABEL] {
+    id: {id},
+    name: {name},
+    en_name: {en_name},
+    image_path: {image_path},
+    description: {description},
+    en_description: {en_description},
+    start: {start},
+    end: {end},
+    start_accuracy: {start_accuracy},
+    end_accuracy: {end_accuracy},
+    is_momentary: {is_momentary},
+    url: {url},
+    affiliate: {affiliate},
+    gender: {gender},
+    is_private: {is_private},
+    is_exclusive: {is_exclusive},
+    user_id: {user_id},
+    last_modified_user: {last_modified_user},
+    quark_type_id: {quark_type_id},
+    created: {created},
+    modified: {modified}
+})
+SET
+  n.start = CASE n.start
+    WHEN 'NULL' THEN null
+    WHEN '0000-00-00 00:00:00' THEN null
+    ELSE datetime(n.start)
+    END,
+  n.end = CASE n.end
+    WHEN 'NULL' THEN null
+    WHEN '0000-00-00 00:00:00' THEN null
+    ELSE datetime(n.end)
+    END,
+  n.created = CASE n.created
+    WHEN 'NULL' THEN null
+    WHEN '0000-00-00 00:00:00' THEN null
+    ELSE datetime(n.created)
+    END,
+  n.modified = CASE n.modified
+    WHEN 'NULL' THEN null
+    WHEN '0000-00-00 00:00:00' THEN null
+    ELSE datetime(n.modified)
+    END
+RETURN n
+__EOD__;
+
+    const NEO4J_DATETIME_FORMAT = 'Y-m-d\TH:i:s+0900';
     const RECORD_PER_PAGE = 100;
     /**
      * Initialize method
@@ -49,6 +98,55 @@ class Neo4jTable extends AppTable
     /****************************************************************************/
     /* Get Data                                                                 */
     /****************************************************************************/
+    public function saveQuark($data, $user_id)
+    {
+        if (!array_key_exists('name', $data) || empty($data['name'])) return false;
+        if (!array_key_exists('quark_type_id', $data) || empty($data['quark_type_id']))
+            $data['quark_type_id'] = QuarkTypesTable::TYPE_THING;
+
+        // build cypher query
+        $label = self::getLabel($data['quark_type_id']);
+        $query = str_replace('[NODE_LABEL]', $label, self::CYPHER_CREATE_QUARK);
+
+        // Format Properties
+        $parameters = self::formatQuarkParameters($data, $user_id);
+        // Log::write('debug', var_dump($parameters));
+
+        // run cypher
+        $result = $this->client->run($query, $parameters);
+        if (count($result->records()) === 0) return false;
+        return self::buildNodeArr($result->getRecord()->value('n'));
+    }
+    public function deleteNode($id)
+    {
+        // build existence check cypher query
+        if (!is_numeric($id)) return false;
+        $check_query = 'MATCH (n) WHERE ID(n) = '.$id.' RETURN n';
+
+        // run cypher
+        $result = $this->client->run($check_query);
+        if (count($result->records()) === 0) return false;
+        Log::write('debug', 'deleting: ' . self::buildNodeArr($result->getRecord()->value('n'))['values']['name']);
+
+        // build delete cypher query
+        $query = 'MATCH (n) WHERE ID(n) = '.$id.' DETACH DELETE n';
+
+        // run cypher
+        return $this->client->run($query);
+    }
+    public function getByName($name)
+    {
+        // build cypher query
+        $query = 'MATCH (subject {name: {name} }) RETURN subject';
+        $parameters = ['name' => $name];
+
+        // run cypher
+        $result = $this->client->run($query, $parameters);
+        if (count($result->records()) === 0) return false;
+
+        return self::buildNodeArr($result->getRecord()->value('subject'));
+    }
+
     public function getQuarks($page, $privacy_mode = \App\Controller\AppController::PRIVACY_PUBLIC, $user_id = null)
     {
         if (($privacy_mode != \App\Controller\AppController::PRIVACY_PUBLIC) && is_null($user_id)) return false;
@@ -83,11 +181,11 @@ class Neo4jTable extends AppTable
         $query = 'CALL db.index.fulltext.queryNodes("nameAndDescription", {search_words}) YIELD node '
                .$where
                .'RETURN node as subject SKIP '. $skip.' LIMIT '.self::RECORD_PER_PAGE;
-        $parameter = ['search_words' => $search_words];
+        $parameters = ['search_words' => $search_words];
         // Log::write('debug',$query);
 
         // run cypher
-        $result = $this->client->run($query, $parameter);
+        $result = $this->client->run($query, $parameters);
         // Log::write('debug',$result);
         
 
@@ -108,10 +206,10 @@ class Neo4jTable extends AppTable
         $query = 'MATCH (subject {name: {name}})-[relation]-(object) '
                .$where
                .'RETURN DISTINCT subject, object, relation';
-        $parameter = ['name' => $name];
+        $parameters = ['name' => $name];
 
         // run cypher
-        $result = $this->client->run($query, $parameter);
+        $result = $this->client->run($query, $parameters);
         if (!$result->records()) return false;
 
         // format result array
@@ -183,9 +281,91 @@ class Neo4jTable extends AppTable
     /* gluons                                              */
     /*******************************************************/
 
-    /****************************************************************************/
-    /* Tools                                                                    */
-    /****************************************************************************/
+    /*******************************************************/
+    /* Formatter                                           */
+    /*******************************************************/
+    public static function buildGuid()
+    {
+        return U::buildGuid(); // varchar 36 フィールドのinsertには必要。
+    }
+    public static function addImageBySearch($data)
+    {
+        if (array_key_exists('image_path', $data) && !empty($data['image_path'])) return $data;
+        if (!array_key_exists('name', $data) || empty($data['name'])) return $data;
+
+        $QuarkTypes = TableRegistry::get('QuarkTypes');
+
+        if (!array_key_exists('quark_type_id', $data) || empty($data['quark_type_id']))
+            $data['quark_type_id'] = QuarkTypesTable::TYPE_THING;
+
+        $quark_type = $QuarkTypes->get($data['quark_type_id']);
+        $data['image_path'] = $quark_type->image_path;
+        return $data;
+    }
+    public static function addTextProperty($data, $key)
+    {
+        if (!array_key_exists($key, $data) || empty($data[$key])) {
+            $data[$key] = null;
+        }
+        return $data;
+    }
+    public static function addDateTimeProperty($data, $key)
+    {
+        if (array_key_exists($key, $data) && !empty($data[$key])) {
+            $time = strtotime($data[$key]);
+            $data[$key] = date(self::NEO4J_DATETIME_FORMAT, $time);
+        } else {
+            $data[$key] = null;
+        }
+        return $data;
+    }
+    public static function addBoolProperty($data, $key)
+    {
+        if (array_key_exists($key, $data) && !empty($data[$key])) {
+            $data[$key] = !!$data[$key];
+        } else {
+            $data[$key] = false;
+        }
+        return $data;
+    }
+    public static function formatQuarkParameters($data, $user_id)
+    {
+        $data['id'] = self::buildGuid();
+        $data['user_id'] = $user_id;
+        $data['last_modified_user'] = $user_id;
+        $data = self::addImageBySearch($data);
+
+        $data = self::addDateTimeProperty($data, 'start');
+        $data = self::addDateTimeProperty($data, 'end');
+
+        foreach (['description', 'start_accuracy', 'end_accuracy', 'url', 'affiliate'] as $property) {
+            $data = self::addTextProperty($data, $property);
+        }
+        foreach (['is_momentary', 'is_private', 'is_exclusive'] as $property) {
+            $data = self::addBoolProperty($data, $property);
+        }
+
+        $now = date(self::NEO4J_DATETIME_FORMAT, time());
+        $data['created'] = $now;
+        $data['modified'] = $now;
+
+        // extra properties for future use
+        $data['en_name'] = '';
+        $data['en_description'] = '';
+        $data['gender'] = null;
+
+        return $data;
+    }
+
+    /*******************************************************/
+    /* Tools                                               */
+    /*******************************************************/
+    public static function getLabel($quark_type_id)
+    {
+        $QuarkTypes = TableRegistry::get('QuarkTypes');
+        $quark_type = $QuarkTypes->get($quark_type_id);
+        return $quark_type->name;
+    }
     public static function buildNodeArr($node)
     {
         return [
