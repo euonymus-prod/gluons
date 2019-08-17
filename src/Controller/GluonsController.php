@@ -173,8 +173,19 @@ class GluonsController extends AppController
                 */
                 $passive_id = $quarkToGlue['identity'];
             } else {
+                $saving_subject['name'] = $this->request->data['passive'];
+                $saving_subject['is_private'] = $this->Auth->user('default_saving_privacy');
+                if ($this->Auth->user('role') == 'admin') {
+                    $saving_subject['is_exclusive'] = true;
+                }
+                $savedSubject = $Neo4j->addQuark($saving_subject, $this->Auth->user('id'));
+                if ($savedSubject) {
+                    $passive_id = $savedSubject['identity'];
+                } else {
+                    $res['message'] = 'The quark to glue could not be saved. Please, try again.';
+                }
 
-        /*
+                /*
                 $saving_subject = [
                     'image_path' => '',
                     'description' => '',
@@ -214,7 +225,7 @@ class GluonsController extends AppController
                     $res['message'] = 'The quark to glue could not be saved. Please, try again.';
                     $res['result'] = $savedSubject;
                 }
-        */
+                */
             }
 
             // Adding New Gluon, after active_id and passive_id are settled
