@@ -153,16 +153,28 @@ class GluonsController extends AppController
     {
         $res = ['status' => 0, 'message' => 'Not accepted'];
 
+        /*
         $Subjects = TableRegistry::get('Subjects');
         $activeQuark = $Subjects->findById($active_id)->first();
+        */
+        $Neo4j = TableRegistry::get('Neo4j');
+        $activeQuark = $Neo4j->getNodeUserCanSee($active_id, $this->Auth->user('id'));
         if (!$activeQuark) {
         } elseif ($this->request->is('post') || array_key_exists('passive', $this->request->data)) {
+            /*
             $Subjects = TableRegistry::get('Subjects');
             $quarkToGlue = $Subjects->findByName($this->request->data['passive'])->first();
+            */
+            $quarkToGlue = $Neo4j->getByName($this->request->data['passive']);
             $passive_id = false;
             if ($quarkToGlue) {
+                /*
                 $passive_id = $quarkToGlue->id;
+                */
+                $passive_id = $quarkToGlue['identity'];
             } else {
+
+        /*
                 $saving_subject = [
                     'image_path' => '',
                     'description' => '',
@@ -202,9 +214,12 @@ class GluonsController extends AppController
                     $res['message'] = 'The quark to glue could not be saved. Please, try again.';
                     $res['result'] = $savedSubject;
                 }
+        */
             }
 
+            // Adding New Gluon, after active_id and passive_id are settled
             if ($passive_id) {
+                /*
                 $Relations = TableRegistry::get('Relations');
                 $relation = $Relations->newEntity();
                 $this->request->data['active_id'] = $active_id;
@@ -213,15 +228,21 @@ class GluonsController extends AppController
 
                 $relation->user_id = $this->Auth->user('id');
                 $relation->last_modified_user = $this->Auth->user('id');
-
                 if ($savedRelation = $Relations->save($relation)) {
+                */
+                $savedRelation = $Neo4j->addGluon($active_id, $passive_id, $this->request->data, $this->Auth->user('id'));
+                if ($savedRelation) {
                     $res['status'] = 1;
                     $res['message'] = 'The gluon has been saved.';
                     $res['result'] = $savedRelation;
+                    /*
                     Cache::clear(false);
+                    */
                 } else {
                     $res['message'] = 'The gluon could not be saved. Please, try again.';
+                    /*
                     $res['result'] = $savedRelation;
+                    */
                 }
             }
         }
@@ -283,6 +304,19 @@ class GluonsController extends AppController
         $res = ['status' => 0, 'message' => 'Not accepted'];
 
         $this->request->allowMethod(['delete']);
+
+        $Neo4j = TableRegistry::get('Neo4j');
+        $graph = $Neo4j->deleteRelationship($id);
+        if ($graph) {
+            // Log::write('debug', $graph->getRecord()->value('relation'));
+            $res['status'] = 1;
+            $res['message'] = 'The gluon has been deleted.';
+        } else {
+            $res['message'] = 'The gluon could not be deleted. Please, try again.';
+        }
+
+
+/*
         $Relations = TableRegistry::get('Relations');
         //$relation = $Relations->get($id);
         $relation = $Relations->findById($id)->first();
@@ -294,6 +328,7 @@ class GluonsController extends AppController
         } else {
             $res['message'] = 'The gluon could not be deleted. Please, try again.';
         }
+*/
         $this->set('deleted', $res);
         $this->set('_serialize', 'deleted');
     }

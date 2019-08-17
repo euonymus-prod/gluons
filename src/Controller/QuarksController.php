@@ -141,9 +141,10 @@ class QuarksController extends AppController
             $graph = $Neo4j->getByName($this->request->data['name']);
             if ($graph) {
                 // $res['results'] = $graph;
+                // Log::write('debug', $graph);
                 $res['message'] = 'The user already exists';
             } else {
-                $graph = $Neo4j->saveQuark($this->request->data, $this->Auth->user('id'));
+                $graph = $Neo4j->addQuark($this->request->data, $this->Auth->user('id'));
                 if ($graph) {
                     $res['status'] = 1;
                     $res['message'] = 'The quark has been saved.';
@@ -234,10 +235,10 @@ class QuarksController extends AppController
 
         $this->request->allowMethod(['delete']);
 
-        // Existence check
         $Neo4j = TableRegistry::get('Neo4j');
         $graph = $Neo4j->deleteNode($id);
         if ($graph) {
+            // Log::write('debug', $graph->summarize());
             $res['status'] = 1;
             $res['message'] = 'The quark has been deleted.';
         } else {

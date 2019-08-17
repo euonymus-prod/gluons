@@ -234,7 +234,7 @@ __EOD__;
     /*******************************************************/
     /* Save Data                                           */
     /*******************************************************/
-    public function saveQuark($data, $user_id)
+    public function addQuark($data, $user_id)
     {
         // Format Properties
         $parameters = self::formatQuarkParameters($data, $user_id);
@@ -259,6 +259,32 @@ __EOD__;
 
         // build delete cypher query
         $query = 'MATCH (n) WHERE ID(n) = '.$id.' DETACH DELETE n';
+
+        // run cypher
+        return $this->client->run($query);
+    }
+    public function addGluon($active_id, $passive_id, $data, $user_id)
+    {
+        // build cypher query
+        $type = self::getType($data['gluon_type_id']);
+        $query = 'MATCH (active),(passive) WHERE ID(active) = '.$active_id.' AND ID(passive) = '.$passive_id
+               .' CREATE (active)-[relation:'.$type.']->(passive)'
+               .' RETURN relation';
+
+        // run cypher
+        $result = $this->client->run($query);
+        if (count($result->records()) === 0) return false;
+        return self::buildRelationshipArr($result->getRecord()->value('relation'));
+    }
+    public function deleteRelationship($id)
+    {
+        // existence check
+        $relationship = $this->getRelationship($id);
+        if (!$relationship) return false;
+        Log::write('debug', 'deleting: ' . print_r($relationship, true));
+
+        // build delete cypher query
+        $query = 'MATCH ()-[relation]-() WHERE ID(relation) = '.$id.' DELETE relation';
 
         // run cypher
         return $this->client->run($query);
@@ -503,6 +529,13 @@ __EOD__;
         $quark_type = $QuarkTypes->get($quark_type_id);
         return $quark_type->name;
     }
+    public static function getType($gluon_type_id)
+    {
+        $GluonTypes = TableRegistry::get('GluonTypes');
+        // NOTE: Model->get($id) Issues Exception when there is not. So I don't check existance of name
+        $gluon_type = $GluonTypes->get($gluon_type_id);
+        return mb_strtoupper(self::underscore($gluon_type->name));
+    }
     public static function buildNodeArr($node)
     {
         return [
@@ -547,5 +580,9 @@ __EOD__;
     public static function isActiveNode($node, $relationship)
     {
         return $relationship->startNodeIdentity() == $node->identity();
+    }
+    public static function underscore($str)
+    {
+        return ltrim(strtolower(preg_replace('/[A-Z]/', '_\0', $str)), '_');
     }
 }
