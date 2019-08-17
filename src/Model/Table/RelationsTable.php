@@ -13,6 +13,8 @@ use App\Utils\U;
 use App\Utils\GlobalDataSet;
 use App\Utils\Wikipedia;
 
+use Cake\Log\Log;
+
 /**
  * Relations Model
  *

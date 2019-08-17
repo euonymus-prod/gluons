@@ -11,6 +11,8 @@ use Cake\Cache\Cache;
 use Cake\Routing\Router;
 use App\Utils\U;
 
+use Cake\Log\Log;
+
 /**
  * Gluons Controller
  *
@@ -231,6 +233,12 @@ class GluonsController extends AppController
     public function one($id = null)
     {
         $res = ['status' => 0, 'message' => 'Not accepted'];
+
+
+        $Neo4j = TableRegistry::get('Neo4j');
+        $res = $Neo4j->getRelationship($id);
+
+/*
         $Relations = TableRegistry::get('Relations');
         $query = $Relations->findById($id)->contain(['Actives', 'Passives']);
         if ($query->count() == 0) {
@@ -238,6 +246,7 @@ class GluonsController extends AppController
         } else {
             $res = $query->first();
         }
+*/
 
         $this->set('editedGluon', $res);
         $this->set('_serialize', 'editedGluon');

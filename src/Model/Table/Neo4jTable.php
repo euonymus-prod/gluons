@@ -100,6 +100,27 @@ __EOD__;
     /****************************************************************************/
     /* Get Data                                                                 */
     /****************************************************************************/
+    public function getRelationship($id)
+    {
+        if (!is_numeric($id)) return false;
+        $query = 'MATCH ()-[relation]-() WHERE id(relation) = '.$id . ' RETURN relation';
+
+        // run cypher
+        $result = $this->client->run($query);
+        // Log::write('debug', $result);
+        if (count($result->records()) === 0) return false;
+        return self::buildRelationshipArr($result->getRecord()->value('relation'));
+    }
+    public function getNode($id)
+    {
+        if (!is_numeric($id)) return false;
+        $query = 'MATCH (n) WHERE ID(n) = '.$id.' RETURN n';
+
+        // run cypher
+        $result = $this->client->run($query);
+        if (count($result->records()) === 0) return false;
+        return self::buildNodeArr($result->getRecord()->value('n'));
+    }
     public function getNodeUserCanSee($id, $user_id)
     {
         if (!is_numeric($id)) return false;
@@ -107,16 +128,6 @@ __EOD__;
         $query = 'MATCH (n) WHERE ID(n) = '.$id
                .(empty($where) ? '' : ' AND ' .$where)
                .' RETURN n';
-
-        // run cypher
-        $result = $this->client->run($query);
-        if (count($result->records()) === 0) return false;
-        return self::buildNodeArr($result->getRecord()->value('n'));
-    }
-    public function getNode($id)
-    {
-        if (!is_numeric($id)) return false;
-        $query = 'MATCH (n) WHERE ID(n) = '.$id.' RETURN n';
 
         // run cypher
         $result = $this->client->run($query);
@@ -505,6 +516,8 @@ __EOD__;
         return [
             'identity' => $relationship->identity(),
             'type' => $relationship->type(),
+            'start_node' => $relationship->startNodeIdentity(),
+            'end_node' => $relationship->endNodeIdentity(),
             'values' => $relationship->values()
         ];
     }
