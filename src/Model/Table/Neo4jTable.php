@@ -73,10 +73,37 @@ SET
 RETURN n
 __EOD__;
 
+    const CYPHER_CREATE_GLUON =<<<__EOD__
+MATCH (active),(passive) WHERE ID(active) = [ACTIVE_ID] AND ID(passive) = [PASSIVE_ID]
+CREATE (active)-[ relation:[TYPE]  ]->(passive)
+SET
+    relation.gluon_type_id = {gluon_type_id},
+    relation.relation = {relation},
+    relation.prefix = {prefix},
+    relation.suffix = {suffix},
+    relation.start = datetime( {start} ),
+    relation.end = datetime( {end} ),
+    relation.start_accuracy = {start_accuracy},
+    relation.end_accuracy = {end_accuracy},
+    relation.is_momentary = {is_momentary},
+    relation.is_exclusive = {is_exclusive},
+    relation.user_id = {user_id},
+    relation.last_modified_user = {last_modified_user},
+    relation.created = datetime( {created} ),
+    relation.modified = datetime( {modified} )
+RETURN relation
+__EOD__;
+
+    const DEFAULT_RELATION_TYPE = 'HAS_RELATION_TO';
+
     const QUARK_BOOL_PROPERTIES = ['is_momentary', 'is_private', 'is_exclusive'];
     const QUARK_STR_PROPERTIES = ['name', 'image_path', 'description', 'start_accuracy', 'end_accuracy', 'url', 'affiliate'];
     const QUARK_INT_PROPERTIES = ['quark_type_id', 'user_id', 'last_modified_user'];
     const QUARK_DATETIME_PROPERTIES = ['start', 'end', 'modified', 'created'];
+
+    const GLUON_BOOL_PROPERTIES = ['is_momentary', 'is_exclusive'];
+    const GLUON_STR_PROPERTIES = ['relation', 'prefix', 'suffix', 'start_accuracy', 'end_accuracy'];
+    const GLUON_INT_PROPERTIES = ['gluon_type_id', 'user_id', 'last_modified_user'];
 
     const NEO4J_DATETIME_FORMAT = 'Y-m-d\TH:i:s+0900';
 
@@ -187,7 +214,6 @@ __EOD__;
         // run cypher
         $result = $this->client->run($query, $parameters);
         // Log::write('debug',$result);
-        
 
         $ret = [];
         foreach ($result->getRecords() as $key => $record) {
@@ -239,10 +265,10 @@ __EOD__;
         // Format Properties
         $parameters = self::formatQuarkParameters($data, $user_id);
         if (!$parameters) return false;
-        // Log::write('debug', var_dump($parameters));
+        // Log::write('debug', print_r($parameters, true));
 
         // build cypher query
-        $label = self::getLabel($data['quark_type_id']);
+        $label = self::getLabel($parameters['quark_type_id']);
         $query = str_replace('[NODE_LABEL]', $label, self::CYPHER_CREATE_QUARK);
 
         // run cypher
@@ -265,14 +291,24 @@ __EOD__;
     }
     public function addGluon($active_id, $passive_id, $data, $user_id)
     {
-        // build cypher query
-        $type = self::getType($data['gluon_type_id']);
-        $query = 'MATCH (active),(passive) WHERE ID(active) = '.$active_id.' AND ID(passive) = '.$passive_id
-               .' CREATE (active)-[relation:'.$type.']->(passive)'
-               .' RETURN relation';
+        // Format Properties
+        $parameters = self::formatGluonParameters($data, $user_id);
+        if (!$parameters) return false;
 
+        // build cypher query
+        $type = self::getType($parameters['gluon_type_id']);
+        $query = str_replace(
+            '[TYPE]', $type,
+            str_replace(
+                '[PASSIVE_ID]', $passive_id,
+                str_replace(
+                    '[ACTIVE_ID]', $active_id,
+                    self::CYPHER_CREATE_GLUON
+                )
+            )
+        );
         // run cypher
-        $result = $this->client->run($query);
+        $result = $this->client->run($query, $parameters);
         if (count($result->records()) === 0) return false;
         return self::buildRelationshipArr($result->getRecord()->value('relation'));
     }
@@ -369,6 +405,9 @@ __EOD__;
         $label = false;
         $old_label = self::getLabel($node['values']['quark_type_id']);
         if (array_key_exists('quark_type_id', $data) && !empty($data['quark_type_id'])) {
+
+
+
             if ((int)$node['values']['quark_type_id'] != (int)$data['quark_type_id']) {
                 $label = self::getLabel($data['quark_type_id']);
             }
@@ -463,11 +502,6 @@ __EOD__;
         }
         return $data;
     }
-    public static function strToFormattedDateTime($str)
-    {
-        $time = strtotime($str);
-        return date(self::NEO4J_DATETIME_FORMAT, $time);
-    }
     public static function addDateTimeProperty($data, $key)
     {
         if (array_key_exists($key, $data) && !empty($data[$key])) {
@@ -486,11 +520,19 @@ __EOD__;
         }
         return $data;
     }
+    public static function strToFormattedDateTime($str)
+    {
+        $time = strtotime($str);
+        return date(self::NEO4J_DATETIME_FORMAT, $time);
+    }
     public static function formatQuarkParameters($data, $user_id)
     {
         if (!array_key_exists('name', $data) || empty($data['name'])) return false;
-        if (!array_key_exists('quark_type_id', $data) || empty($data['quark_type_id']))
+        if (!array_key_exists('quark_type_id', $data) || empty($data['quark_type_id'])) {
             $data['quark_type_id'] = QuarkTypesTable::TYPE_THING;
+        } else {
+            $data['quark_type_id'] = (int) $data['quark_type_id'];
+        }
 
         $data['id'] = self::buildGuid();
         $data['user_id'] = $user_id;
@@ -518,6 +560,35 @@ __EOD__;
 
         return $data;
     }
+    public static function formatGluonParameters($data, $user_id)
+    {
+        if (!array_key_exists('relation', $data) || empty($data['relation'])) return false;
+        if (!array_key_exists('gluon_type_id', $data) || empty($data['gluon_type_id'])) {
+            $data['gluon_type_id'] = NULL;
+        } else {
+            $data['gluon_type_id'] = (int) $data['gluon_type_id'];
+        }
+
+        $data['id'] = self::buildGuid();
+        $data['user_id'] = $user_id;
+        $data['last_modified_user'] = $user_id;
+
+        $data = self::addDateTimeProperty($data, 'start');
+        $data = self::addDateTimeProperty($data, 'end');
+
+        foreach (self::GLUON_STR_PROPERTIES as $property) {
+            $data = self::addTextProperty($data, $property);
+        }
+        foreach (self::GLUON_BOOL_PROPERTIES as $property) {
+            $data = self::addBoolProperty($data, $property);
+        }
+
+        $now = date(self::NEO4J_DATETIME_FORMAT, time());
+        $data['created'] = $now;
+        $data['modified'] = $now;
+
+        return $data;
+    }
 
     /*******************************************************/
     /* Tools                                               */
@@ -531,6 +602,7 @@ __EOD__;
     }
     public static function getType($gluon_type_id)
     {
+        if (is_null($gluon_type_id)) return self::DEFAULT_RELATION_TYPE;
         $GluonTypes = TableRegistry::get('GluonTypes');
         // NOTE: Model->get($id) Issues Exception when there is not. So I don't check existance of name
         $gluon_type = $GluonTypes->get($gluon_type_id);
