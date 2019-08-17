@@ -287,6 +287,21 @@ class GluonsController extends AppController
     public function edit($id = null)
     {
         $res = ['status' => 0, 'message' => 'Not accepted'];
+        $Neo4j = TableRegistry::get('Neo4j');
+        if ($this->request->is(['patch'])) {
+            $graph = $Neo4j->editGluon($id, $this->request->data, $this->Auth->user('id'));
+            if ($graph) {
+                $res['status'] = 1;
+                $res['message'] = 'The gluon has been saved.';
+                $res['result'] = $graph;
+            } else {
+                $res['message'] = 'The gluon could not be saved. Please, try again.';
+            }
+        }
+                
+
+
+        /*
         $Relations = TableRegistry::get('Relations');
         $relation = $Relations->findById($id);
         if ($this->request->is(['patch']) && ($relation->count() == 1)) {
@@ -306,6 +321,7 @@ class GluonsController extends AppController
                 $res['result'] = $savedRelation;
             }
         }
+        */
         $this->set('editedGluon', $res);
         $this->set('_serialize', 'editedGluon');
     }

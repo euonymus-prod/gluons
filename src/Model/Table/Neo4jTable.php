@@ -96,10 +96,11 @@ __EOD__;
 
     const DEFAULT_RELATION_TYPE = 'HAS_RELATION_TO';
 
+    const DATETIME_PROPERTIES = ['start', 'end', 'modified', 'created'];
+
     const QUARK_BOOL_PROPERTIES = ['is_momentary', 'is_private', 'is_exclusive'];
     const QUARK_STR_PROPERTIES = ['name', 'image_path', 'description', 'start_accuracy', 'end_accuracy', 'url', 'affiliate'];
     const QUARK_INT_PROPERTIES = ['quark_type_id', 'user_id', 'last_modified_user'];
-    const QUARK_DATETIME_PROPERTIES = ['start', 'end', 'modified', 'created'];
 
     const GLUON_BOOL_PROPERTIES = ['is_momentary', 'is_exclusive'];
     const GLUON_STR_PROPERTIES = ['relation', 'prefix', 'suffix', 'start_accuracy', 'end_accuracy'];
@@ -130,7 +131,7 @@ __EOD__;
     public function getRelationship($id)
     {
         if (!is_numeric($id)) return false;
-        $query = 'MATCH ()-[relation]-() WHERE id(relation) = '.$id . ' RETURN relation';
+        $query = 'MATCH ()-[relation]-() WHERE ID(relation) = '.$id . ' RETURN relation';
 
         // run cypher
         $result = $this->client->run($query);
@@ -365,49 +366,13 @@ __EOD__;
         $node = $this->getNode($id);
         if (!$node) return false;
 
-        // Common properties
-        $data['last_modified_user'] = $user_id;
-        $data['modified'] = date(self::NEO4J_DATETIME_FORMAT, time());
-        
-        $snippets = [];
-        $parameters = [];
-        foreach($data as $key => $val) {
-            $func_pre = '';
-            $func_post = '';
-            // NOTE: U::trimSpace only accept strings. If int is given, this will be broken.
-            $val = U::trimSpace((string)$val);
-            if (in_array($key, self::QUARK_BOOL_PROPERTIES)) {
-                if (($val != 0) && ($val != 1)) return false;
-                $parameters[$key] = ($val == 0) ? false : true;
-            } elseif (in_array($key, self::QUARK_INT_PROPERTIES)) {
-                if (!is_numeric($val)) return false;
-                $parameters[$key] = (int) $val;
-            } elseif (in_array($key, self::QUARK_STR_PROPERTIES)) {
-                $parameters[$key] = empty($val) ? NULL : $val;
-            } elseif (in_array($key, self::QUARK_DATETIME_PROPERTIES)) {
-                if (empty($val)) {
-                    $parameters[$key] = NULL;
-                } else {
-                    $func_pre = 'datetime( ';
-                    $func_post = ' )';
-                    $parameters[$key] = self::strToFormattedDateTime($val);
-                }
-            } else {
-                continue;
-            }
-            $snippets[] = $key . ': '.$func_pre.'{' . $key . '}'.$func_post;
-        }
-
-
-        $update_snippet = '{ ' . implode(', ',$snippets) . ' }';
+        $saving = self::generateCypherSnippet($data, $user_id, self::QUARK_BOOL_PROPERTIES, self::QUARK_INT_PROPERTIES,
+                                              self::QUARK_STR_PROPERTIES);
 
         // NOTE: quark_type_id の変更があるかどうかをチェック（あれば、Labelの更新が必要になる)
         $label = false;
         $old_label = self::getLabel($node['values']['quark_type_id']);
         if (array_key_exists('quark_type_id', $data) && !empty($data['quark_type_id'])) {
-
-
-
             if ((int)$node['values']['quark_type_id'] != (int)$data['quark_type_id']) {
                 $label = self::getLabel($data['quark_type_id']);
             }
@@ -421,15 +386,75 @@ __EOD__;
             $update_label_post = ', n:'.$label;
         }
         $query = 'MATCH (n:'.$old_label.') WHERE ID(n) = '.$id
-               .$update_label_pre.' SET n += '.$update_snippet .' '.$update_label_post. ' RETURN n';
+               .$update_label_pre.' SET n += '.$saving['update_snippet'] .' '.$update_label_post. ' RETURN n';
 
         // run cypher
         Log::write('debug', 'updating: ' . $node['values']['name']);
-        $result = $this->client->run($query, $parameters);
+        $result = $this->client->run($query, $saving['parameters']);
         if (count($result->records()) === 0) return false;
         return self::buildNodeArr($result->getRecord()->value('n'));
     }
+    public function editGluon($id, $data, $user_id)
+    {
+        // NOTE: relation自体が存在しないのは許容。relationがemptyは不可。
+        if (array_key_exists('relation', $data) && empty($data['relation'])) return false;
 
+        // existence check
+        $relationship = $this->getRelationship($id);
+        if (!$relationship) return false;
+
+        $saving = self::generateCypherSnippet($data, $user_id, self::GLUON_BOOL_PROPERTIES, self::GLUON_INT_PROPERTIES,
+                                              self::GLUON_STR_PROPERTIES);
+
+        // NOTE: gluon_type_id の変更があるかどうかをチェック（あれば、Typeの更新が必要になる)
+        $type = false;
+        // $old_type = self::getType($relationship['values']['gluon_type_id']);
+        if (array_key_exists('gluon_type_id', $data) && !empty($data['gluon_type_id'])) {
+            if ((int)$relationship['values']['gluon_type_id'] != (int)$data['gluon_type_id']) {
+                $type = self::getType($data['gluon_type_id']);
+            }
+        }
+
+// MATCH (n:User {name:"foo"})-[r:REL]->(m:User {name:"bar"})
+// CREATE (n)-[r2:NEWREL]->(m)
+// // copy properties, if necessary
+// SET r2 = r
+// WITH r
+// DELETE r
+
+
+
+        $query = 'MATCH (active)-[relation]->(passive) WHERE ID(relation) = '.$id
+               .' SET relation += '.$saving['update_snippet'].' RETURN relation';
+
+        // Log::write('debug', $saving['update_snippet']);
+        // Log::write('debug', $saving['parameters']);
+        // Log::write('debug', $query);
+
+        // run cypher
+        Log::write('debug', 'updating: ' . print_r($relationship['values'], true));
+        $result = $this->client->run($query, $saving['parameters']);
+        if (count($result->records()) === 0) return false;
+        $updated = self::buildRelationshipArr($result->getRecord()->value('relation'));
+
+        // Log::write('debug', __LINE__);
+        // if ($type) {
+        //     Log::write('debug', __LINE__);
+        //     //$updated['identity']
+        //     $query2 = 'MATCH (active)-[relation]->(passive)'
+        //             .' WHERE ID(relation) = '.$id
+        //             .' CREATE (active)-[relation2:'.$type.']->(passive)'
+        //             .' SET relation2 = relation'
+        //             .' WITH relation'
+        //             .' DELETE relation';
+        //     $result2 = $this->client->run($query2);
+        //     if (count($result2->records()) === 0) return false;
+        //     $updated = self::buildRelationshipArr($result2->getRecord()->value('relation'));
+        // }
+        // Log::write('debug', __LINE__);
+
+        return $updated;
+    }
 
     /*******************************************************/
     /* where                                               */
@@ -559,6 +584,43 @@ __EOD__;
         $data['gender'] = null;
 
         return $data;
+    }
+    public function generateCypherSnippet($data, $user_id, $bool_props, $int_props, $str_props)
+    {
+        // Common properties
+        $data['last_modified_user'] = $user_id;
+        $data['modified'] = date(self::NEO4J_DATETIME_FORMAT, time());
+        
+        $snippets = [];
+        $parameters = [];
+        foreach($data as $key => $val) {
+            $func_pre = '';
+            $func_post = '';
+            // NOTE: U::trimSpace only accept strings. If int is given, this will be broken.
+            $val = U::trimSpace((string)$val);
+            if (in_array($key, $bool_props)) {
+                if (($val != 0) && ($val != 1)) return false;
+                $parameters[$key] = ($val == 0) ? false : true;
+            } elseif (in_array($key, $int_props)) {
+                if (!is_numeric($val)) return false;
+                $parameters[$key] = (int) $val;
+            } elseif (in_array($key, $str_props)) {
+                $parameters[$key] = empty($val) ? NULL : $val;
+            } elseif (in_array($key, self::DATETIME_PROPERTIES)) {
+                if (empty($val)) {
+                    $parameters[$key] = NULL;
+                } else {
+                    $func_pre = 'datetime( ';
+                    $func_post = ' )';
+                    $parameters[$key] = self::strToFormattedDateTime($val);
+                }
+            } else {
+                continue;
+            }
+            $snippets[] = $key . ': '.$func_pre.'{' . $key . '}'.$func_post;
+        }
+        $update_snippet = '{ ' . implode(', ',$snippets) . ' }';
+        return compact('update_snippet', 'parameters');
     }
     public static function formatGluonParameters($data, $user_id)
     {
