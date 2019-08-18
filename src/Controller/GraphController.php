@@ -99,6 +99,33 @@ class GraphController extends AppController
                 'gluons_related' => $gluons_related
             ];
         }
+
+        $ret['others'] = [
+            'quark_property' => [
+                'name' => 'others',
+                'caption' => 'others',
+                'caption_ja' => 'その他',
+            ],
+            'gluons_related' => []
+        ];
+        foreach($graph['relations'] as $gluon) {
+            $notInArray = true;
+            foreach($ret as $quark_property) {
+                if (count($quark_property['gluons_related']) === 0) continue;
+                foreach($quark_property['gluons_related'] as $property_gluons) {
+                    // Log::write('debug', 'A: '.$property_gluons['relation']['identity']);
+                    // Log::write('debug', $gluon['relation']['identity']);
+                    if ($property_gluons['relation']['identity'] == $gluon['relation']['identity']) {
+                        $notInArray = false;
+                        break;
+                    }
+                }
+                if (!$notInArray) break;
+            }
+            if ($notInArray) {
+                $ret['others']['gluons_related'][] = $gluon;
+            }
+        }
         return $ret;
     }
     public function _getQuarkProperty($quark_property_id)
