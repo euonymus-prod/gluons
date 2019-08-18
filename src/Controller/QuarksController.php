@@ -395,25 +395,42 @@ class QuarksController extends AppController
 
         // Pickup contents
         $en_pickup_ids = [
-            'b96a6ce9-cb03-4091-a7d9-a6eb2aa94f3b' => 'active',  // Donald Trump's Strategic and Policy Forum
-            '006f7220-a171-41f6-ab7d-13019f42375c' => 'active',  // 明治維新:  歴史
-            '25e6d34b-38b1-4586-97f5-f130fff1b9a0' => 'active',  // iPhone:   ガジェット
-            'd6484654-8c9b-44d3-b400-83e156a83dc2' => 'passive', // Y Combinator
-            'cf873581-5d92-44ed-b205-cb016e2de6d8' => 'active',  // Rothschild & co
-            '80728b23-9b10-4d0c-b010-e53e742eed8a' => 'active',  // Shinzo Abe
-            'eff387d7-8ec9-467a-ab6f-c72310ba6c4d' => 'active',  // Black Sabbath
-            '0886067b-6b82-4ffe-8d5b-5c216f84ad00' => 'active',  // 大統領
+            "岡田朋峰",
+            "守谷絢子",
+            "伊藤春香 (編集者)",
+            "阿部哲子",
+            "稲井大輝",
+            "高橋ユウ",
+            "上原多香子",
+            "Koki",
+            // 'b96a6ce9-cb03-4091-a7d9-a6eb2aa94f3b' => 'active',  // Donald Trump's Strategic and Policy Forum
+            // '006f7220-a171-41f6-ab7d-13019f42375c' => 'active',  // 明治維新:  歴史
+            // '25e6d34b-38b1-4586-97f5-f130fff1b9a0' => 'active',  // iPhone:   ガジェット
+            // 'd6484654-8c9b-44d3-b400-83e156a83dc2' => 'passive', // Y Combinator
+            // 'cf873581-5d92-44ed-b205-cb016e2de6d8' => 'active',  // Rothschild & co
+            // '80728b23-9b10-4d0c-b010-e53e742eed8a' => 'active',  // Shinzo Abe
+            // 'eff387d7-8ec9-467a-ab6f-c72310ba6c4d' => 'active',  // Black Sabbath
+            // '0886067b-6b82-4ffe-8d5b-5c216f84ad00' => 'active',  // 大統領
         ];
 
         $ja_pickup_ids = [
-            'dc3687ef-0ee8-474d-a1a8-ee031e982fe5' => 'active', // 岡田朋峰
-            '5076af3b-5ebd-4669-87b2-8fa0ac658d0b' => 'active', // 守谷絢子
-            '9909f294-f690-4dae-b8ab-0aa1260470ea' => 'active', // 伊藤春香 (編集者)
-            'e154a4b8-4c2f-46f9-8833-379e1f4152a5' => 'active', // 阿部哲子
-            'b4a6acc5-3b9a-4809-88cc-db5128283d5d' => 'active', // 稲井大輝
-            '705349d0-8202-4aa3-9d1d-dc6ddd7e02dd' => 'active', // 高橋ユウ
-            'b512494a-a48b-452e-9de5-259861c71006' => 'active', // 上原多香子
-            '838f2234-b2ce-409f-9179-1ebb33349b8c' => 'active', // Koki
+            "岡田朋峰",
+            "守谷絢子",
+            "伊藤春香 (編集者)",
+            "阿部哲子",
+            "稲井大輝",
+            "高橋ユウ",
+            "上原多香子",
+            "Koki",
+
+            // 'dc3687ef-0ee8-474d-a1a8-ee031e982fe5' => 'active', // 岡田朋峰
+            // '5076af3b-5ebd-4669-87b2-8fa0ac658d0b' => 'active', // 守谷絢子
+            // '9909f294-f690-4dae-b8ab-0aa1260470ea' => 'active', // 伊藤春香 (編集者)
+            // 'e154a4b8-4c2f-46f9-8833-379e1f4152a5' => 'active', // 阿部哲子
+            // 'b4a6acc5-3b9a-4809-88cc-db5128283d5d' => 'active', // 稲井大輝
+            // '705349d0-8202-4aa3-9d1d-dc6ddd7e02dd' => 'active', // 高橋ユウ
+            // 'b512494a-a48b-452e-9de5-259861c71006' => 'active', // 上原多香子
+            // '838f2234-b2ce-409f-9179-1ebb33349b8c' => 'active', // Koki
 
             //'24837830-d592-4998-adec-50a3bb9e2866' => 'active', // 今井絵理子
             //'422e5400-1933-47a2-a5dc-fe0a1ec86bfe' => 'active', // 川瀬賢太郎
@@ -465,9 +482,18 @@ class QuarksController extends AppController
             $pickup_ids = $ja_pickup_ids;
         }
 
+
+
+
+        $Neo4j = TableRegistry::get('Neo4j');
+        return $Neo4j->pickups($pickup_ids);
+        // Log::write('debug', $pickups);
+
+        /*
         $Subjects = TableRegistry::get('Subjects');
         $pickups = $Subjects->find('all', ['conditions' => ['Subjects.id in' => array_keys($pickup_ids)]])->limit(8);
         return self::_pickupsOrder($pickups, $pickup_ids);
+        */
 
         /* $this->set('pickups', $pickups); */
         /* $this->set('_serialize', 'pickups'); */

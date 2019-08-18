@@ -199,6 +199,22 @@ __EOD__;
         return $ret;
     }
 
+    public function pickups($pickup_ids)
+    {
+        // build cypher query
+        $query = 'MATCH (subject) WHERE subject.name IN ["'.implode('","', $pickup_ids).'"] RETURN subject';
+
+        // run cypher
+        $result = $this->client->run($query);
+
+        $ret = [];
+        foreach ($result->getRecords() as $key => $record) {
+            $ret[] = self::buildNodeArr($record->value('subject'));
+        }
+        // Log::write('debug', $ret);
+        return $ret;
+    }
+
     public function searchQuarks($search_words, $page, $privacy_mode = \App\Controller\AppController::PRIVACY_PUBLIC, $user_id = null)
     {
         if (($privacy_mode != \App\Controller\AppController::PRIVACY_PUBLIC) && is_null($user_id)) return false;
