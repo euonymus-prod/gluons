@@ -44,6 +44,7 @@ class GraphController extends AppController
         if (!$graph || count($graph) == 0) {
             $res = ['status' => 0, 'message' => 'Not found'];
         } else {
+            $graph['relations'] = $this->_formatByQuarkProperties($graph);
             $res = $graph;
         }
         // Log::write('debug', $res);
@@ -63,11 +64,73 @@ class GraphController extends AppController
         if (!$graph || count($graph) == 0) {
             $res = ['status' => 0, 'message' => 'Not found'];
         } else {
+            $graph['relations'] = $this->_formatByQuarkProperties($graph);
             $res = $graph;
         }
         // Log::write('debug', $res);
 
         $this->set('articles', $res);
         $this->set('_serialize', 'articles');
+    }
+
+    /*************************************************************/
+    /* 以下 Quark Property別の Gluon再構成関数                      */
+    /*************************************************************/
+    public function _formatByQuarkProperties($graph)
+    {
+        $quark_type_id = $graph['subject']['values']['quark_type_id'];
+
+        $QtypeProperties = TableRegistry::get('QtypeProperties');
+        $qtype_properties = $QtypeProperties->findByQuarkTypeId($quark_type_id);
+        $ret = [];
+        foreach($qtype_properties as $qtype_property) {
+            $quark_property_id = $qtype_property['quark_property_id'];
+            $gluons_related = $this->_getGluonTypesRelated($quark_property_id, $graph);
+            $quark_property = $this->_getQuarkProperty($quark_property_id);
+
+            $ret[$quark_property_id] = [
+                'quark_property' => $quark_property,
+                'gluons_related' => $gluons_related
+            ];
+        }
+        return $ret;
+    }
+    public function _getQuarkProperty($quark_property_id)
+    {
+        $QuarkProperties = TableRegistry::get('QuarkProperties');
+        return $QuarkProperties->get($quark_property_id)->toArray();
+    }
+    public function _getGluonTypesRelated($quark_property_id, $graph)
+    {
+        $QpropertyGtypes = TableRegistry::get('QpropertyGtypes');
+        $qproperty_gtypes = $QpropertyGtypes->findByQuarkPropertyId($quark_property_id);
+        $ret = [];
+        foreach ($qproperty_gtypes as $qproperty_gtype) {
+            $tmp = $this->_addGluonsByType($qproperty_gtype['gluon_type_id'], $qproperty_gtype['sides'], $graph);
+            $ret = array_merge($ret, $tmp);
+        }
+        return $ret;
+    }
+    public function _addGluonsByType($gluon_type_id, $sides, $graph)
+    {
+        $subject_id = $graph['subject']['identity'];
+        $candidates = $graph['relations'];
+        $ret = [];
+        foreach($candidates as $candidate) {
+            if (!array_key_exists('gluon_type_id', $candidate['relation']['values'])) {
+                continue;
+            }
+            $candidate_gluon_type_id = $candidate['relation']['values']['gluon_type_id'];
+            if ($candidate_gluon_type_id == $gluon_type_id) {
+                if ($sides == 0) {
+                    $ret[] = $candidate;
+                } elseif (($sides == 1) && ($subject_id == $candidate['active']['identity'])) {
+                    $ret[] = $candidate;
+                } elseif (($sides == 2) && ($subject_id == $candidate['passive']['identity'])) {
+                    $ret[] = $candidate;
+                }
+            }
+        }
+        return $ret;
     }
 }
