@@ -10,6 +10,8 @@ use Cake\Cache\Cache;
 use Cake\Routing\Router;
 use App\Utils\U;
 
+use App\Model\Table\QuarkTypesTable;
+
 use Cake\Log\Log;
 
 /**
@@ -78,7 +80,11 @@ class GraphController extends AppController
     /*************************************************************/
     public function _formatByQuarkProperties($graph)
     {
-        $quark_type_id = $graph['subject']['values']['quark_type_id'];
+        $data = $graph['subject']['values'];
+        if (!array_key_exists('quark_type_id', $data) || empty($data['quark_type_id'])) {
+            $data['quark_type_id'] = QuarkTypesTable::TYPE_THING;
+        }
+        $quark_type_id = $data['quark_type_id'];
 
         $QtypeProperties = TableRegistry::get('QtypeProperties');
         $qtype_properties = $QtypeProperties->findByQuarkTypeId($quark_type_id);
