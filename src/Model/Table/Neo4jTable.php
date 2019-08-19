@@ -162,10 +162,18 @@ __EOD__;
         if (count($result->records()) === 0) return false;
         return self::buildNodeArr($result->getRecord()->value('n'));
     }
-    public function getByName($name)
+    public function getByName($name, $privacy_mode = null, $user_id = null)
     {
         // build cypher query
-        $query = 'MATCH (subject {name: {name} }) RETURN subject';
+        $where = '';
+        if (!is_null($privacy_mode)) {
+            if (is_null($user_id)) {
+                $privacy_mode = \App\Controller\AppController::PRIVACY_PUBLIC;
+                $user_id = 1;
+            }
+            $where = 'WHERE '.self::whereNodePrivacy($privacy_mode, $user_id);
+        }
+        $query = 'MATCH (subject {name: {name} }) '.$where.' RETURN subject';
         $parameters = ['name' => $name];
 
         // run cypher
@@ -257,7 +265,14 @@ __EOD__;
 
         // run cypher
         $result = $this->client->run($query, $parameters);
-        if (!$result->records()) return false;
+        if (!$result->records()) {
+            // add quark 直後は relationshipが無いので、別のqueryで取得 try
+            $quark = $this->getByName($name, $privacy_mode, $user_id);
+            if (!$quark) {
+                return false;
+            }
+            return ['subject' => $quark, 'relations' => []];
+        }
 
         // format result array
         $subject = $result->getRecord()->value('subject');
