@@ -248,7 +248,11 @@ __EOD__;
         $where = self::wherePrivacy($privacy_mode, $user_id);
         $query = 'MATCH (subject {name: {name}})-[relation]-(object) '
                .(empty($where) ? '' : 'WHERE ' .$where)
-               .'RETURN DISTINCT subject, object, relation';
+               .'RETURN DISTINCT subject, object, relation'
+               .' ORDER BY (CASE relation.start WHEN null THEN {} ELSE relation.start END) DESC';
+        // NOTE: Null always comes the first, when Desc Order. So above the little bit of trick.
+        // https://github.com/opencypher/openCypher/issues/238
+
         $parameters = ['name' => $name];
 
         // run cypher

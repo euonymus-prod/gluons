@@ -89,6 +89,8 @@ class GraphController extends AppController
         $QtypeProperties = TableRegistry::get('QtypeProperties');
         $qtype_properties = $QtypeProperties->findByQuarkTypeId($quark_type_id);
         $ret = [];
+        // TODO: quark_property loop -> gluon loop だと各property内のgluonのorderが狂ってしまうので、
+        //       gluon loop -> quark_property loop の順にした方がよいかも。
         foreach($qtype_properties as $qtype_property) {
             $quark_property_id = $qtype_property['quark_property_id'];
             $gluons_related = $this->_getGluonTypesRelated($quark_property_id, $graph);
