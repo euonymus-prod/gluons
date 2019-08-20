@@ -104,7 +104,7 @@ __EOD__;
     const QUARK_INT_PROPERTIES = ['quark_type_id', 'user_id', 'last_modified_user'];
 
     const GLUON_BOOL_PROPERTIES = ['is_momentary', 'is_exclusive'];
-    const GLUON_STR_PROPERTIES = ['relation', 'prefix', 'suffix', 'start_accuracy', 'end_accuracy'];
+    const GLUON_STR_PROPERTIES = ['id', 'relation', 'prefix', 'suffix', 'start_accuracy', 'end_accuracy'];
     const GLUON_INT_PROPERTIES = ['gluon_type_id', 'user_id', 'last_modified_user'];
 
     const NEO4J_DATETIME_FORMAT = 'Y-m-d\TH:i:s+0900';
@@ -661,13 +661,19 @@ __EOD__;
     {
         if (!array_key_exists('relation', $data) || empty($data['relation'])) {
             return false;
-        } else {
-            $ret = ['relation' => $data['relation']];
         }
         if (!array_key_exists('gluon_type_id', $data) || empty($data['gluon_type_id'])) {
-            $data['gluon_type_id'] = NULL;
+            $ret['gluon_type_id'] = NULL;
         } else {
-            $data['gluon_type_id'] = (int) $data['gluon_type_id'];
+            $ret['gluon_type_id'] = (int) $data['gluon_type_id'];
+        }
+
+        // NOTE: 明示的な代入を上書きしないように先にやる
+        foreach (self::GLUON_STR_PROPERTIES as $property) {
+            $ret[$property] = self::formatTextProperty($data, $property);
+        }
+        foreach (self::GLUON_BOOL_PROPERTIES as $property) {
+            $ret[$property] = self::formatBoolProperty($data, $property);
         }
 
         $ret['id'] = self::buildGuid();
@@ -676,13 +682,6 @@ __EOD__;
 
         $ret['start'] = self::formatDateTimeProperty($data, 'start');
         $ret['end'] = self::formatDateTimeProperty($data, 'end');
-
-        foreach (self::GLUON_STR_PROPERTIES as $property) {
-            $ret[$property] = self::formatTextProperty($data, $property);
-        }
-        foreach (self::GLUON_BOOL_PROPERTIES as $property) {
-            $ret[$property] = self::formatBoolProperty($data, $property);
-        }
 
         $now = date(self::NEO4J_DATETIME_FORMAT, time());
         $ret['created'] = $now;
