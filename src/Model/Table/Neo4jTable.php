@@ -172,7 +172,8 @@ __EOD__;
                 $privacy_mode = \App\Controller\AppController::PRIVACY_PUBLIC;
                 $user_id = 1;
             }
-            $where = 'WHERE '.self::whereNodePrivacy($privacy_mode, $user_id);
+            $whereRaw = self::whereNodePrivacy($privacy_mode, $user_id);
+            $where = empty($whereRaw) ? '' : 'WHERE '.$whereRaw;
         }
         $query = 'MATCH (subject {name: {name} }) '.$where.' RETURN subject';
         $parameters = ['name' => $name];
@@ -547,7 +548,7 @@ __EOD__;
     }
     public static function defaultImage($data)
     {
-        if (array_key_exists('image_path', $data) && !empty($data['image_path'])) return false;
+        if (array_key_exists('image_path', $data) && !empty($data['image_path'])) return $data['image_path'];
         if (!array_key_exists('quark_type_id', $data) || empty($data['quark_type_id']))
             $data['quark_type_id'] = QuarkTypesTable::TYPE_THING;
 
@@ -585,13 +586,19 @@ __EOD__;
     {
         if (!array_key_exists('name', $data) || empty($data['name'])) {
             return false;
-        } else {
-            $ret = ['name' => $data['name']];
         }
         if (!array_key_exists('quark_type_id', $data) || empty($data['quark_type_id'])) {
             $ret['quark_type_id'] = QuarkTypesTable::TYPE_THING;
         } else {
             $ret['quark_type_id'] = (int) $data['quark_type_id'];
+        }
+
+        // NOTE: 明示的な代入を上書きしないように先にやる
+        foreach (self::QUARK_STR_PROPERTIES as $property) {
+            $ret[$property] = self::formatTextProperty($data, $property);
+        }
+        foreach (self::QUARK_BOOL_PROPERTIES as $property) {
+            $ret[$property] = self::formatBoolProperty($data, $property);
         }
 
         $ret['id'] = self::buildGuid();
@@ -601,13 +608,6 @@ __EOD__;
 
         $ret['start'] = self::formatDateTimeProperty($data, 'start');
         $ret['end'] = self::formatDateTimeProperty($data, 'end');
-
-        foreach (self::QUARK_STR_PROPERTIES as $property) {
-            $ret[$property] = self::formatTextProperty($data, $property);
-        }
-        foreach (self::QUARK_BOOL_PROPERTIES as $property) {
-            $ret[$property] = self::formatBoolProperty($data, $property);
-        }
 
         $now = date(self::NEO4J_DATETIME_FORMAT, time());
         $ret['created'] = $now;
