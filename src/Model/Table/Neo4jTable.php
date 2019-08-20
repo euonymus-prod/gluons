@@ -99,7 +99,8 @@ __EOD__;
     const DATETIME_PROPERTIES = ['start', 'end', 'modified', 'created'];
 
     const QUARK_BOOL_PROPERTIES = ['is_momentary', 'is_private', 'is_exclusive'];
-    const QUARK_STR_PROPERTIES = ['name', 'image_path', 'description', 'start_accuracy', 'end_accuracy', 'url', 'affiliate'];
+    const QUARK_STR_PROPERTIES = ['id', 'name', 'image_path', 'description', 'start_accuracy', 'end_accuracy',
+                                  'url', 'affiliate'];
     const QUARK_INT_PROPERTIES = ['quark_type_id', 'user_id', 'last_modified_user'];
 
     const GLUON_BOOL_PROPERTIES = ['is_momentary', 'is_exclusive'];
@@ -544,41 +545,36 @@ __EOD__;
     {
         return U::buildGuid(); // varchar 36 フィールドのinsertには必要。
     }
-    public static function addImageBySearch($data)
+    public static function defaultImage($data)
     {
-        if (array_key_exists('image_path', $data) && !empty($data['image_path'])) return $data;
+        if (array_key_exists('image_path', $data) && !empty($data['image_path'])) return false;
         if (!array_key_exists('quark_type_id', $data) || empty($data['quark_type_id']))
             $data['quark_type_id'] = QuarkTypesTable::TYPE_THING;
 
         $QuarkTypes = TableRegistry::get('QuarkTypes');
         $quark_type = $QuarkTypes->get($data['quark_type_id']);
-        $data['image_path'] = $quark_type->image_path;
-        return $data;
+        return $quark_type->image_path;
     }
-    public static function addTextProperty($data, $key)
+    public static function formatTextProperty($data, $key)
     {
         if (!array_key_exists($key, $data) || empty($data[$key])) {
-            $data[$key] = null;
+            return null;
         }
-        return $data;
+        return $data[$key];
     }
-    public static function addDateTimeProperty($data, $key)
+    public static function formatDateTimeProperty($data, $key)
     {
-        if (array_key_exists($key, $data) && !empty($data[$key])) {
-            $data[$key] = self::strToFormattedDateTime($data[$key]);
-        } else {
-            $data[$key] = null;
+        if (!array_key_exists($key, $data) || empty($data[$key])) {
+            return null;
         }
-        return $data;
+        return self::strToFormattedDateTime($data[$key]);
     }
-    public static function addBoolProperty($data, $key)
+    public static function formatBoolProperty($data, $key)
     {
-        if (array_key_exists($key, $data) && !empty($data[$key])) {
-            $data[$key] = !!$data[$key];
-        } else {
-            $data[$key] = false;
+        if (!array_key_exists($key, $data) || empty($data[$key])) {
+            return false;
         }
-        return $data;
+        return !!$data[$key];
     }
     public static function strToFormattedDateTime($str)
     {
@@ -587,38 +583,42 @@ __EOD__;
     }
     public static function formatQuarkParameters($data, $user_id)
     {
-        if (!array_key_exists('name', $data) || empty($data['name'])) return false;
-        if (!array_key_exists('quark_type_id', $data) || empty($data['quark_type_id'])) {
-            $data['quark_type_id'] = QuarkTypesTable::TYPE_THING;
+        if (!array_key_exists('name', $data) || empty($data['name'])) {
+            return false;
         } else {
-            $data['quark_type_id'] = (int) $data['quark_type_id'];
+            $ret = ['name' => $data['name']];
+        }
+        if (!array_key_exists('quark_type_id', $data) || empty($data['quark_type_id'])) {
+            $ret['quark_type_id'] = QuarkTypesTable::TYPE_THING;
+        } else {
+            $ret['quark_type_id'] = (int) $data['quark_type_id'];
         }
 
-        $data['id'] = self::buildGuid();
-        $data['user_id'] = $user_id;
-        $data['last_modified_user'] = $user_id;
-        $data = self::addImageBySearch($data);
+        $ret['id'] = self::buildGuid();
+        $ret['user_id'] = $user_id;
+        $ret['last_modified_user'] = $user_id;
+        $ret['image_path'] = self::defaultImage($data);
 
-        $data = self::addDateTimeProperty($data, 'start');
-        $data = self::addDateTimeProperty($data, 'end');
+        $ret['start'] = self::formatDateTimeProperty($data, 'start');
+        $ret['end'] = self::formatDateTimeProperty($data, 'end');
 
         foreach (self::QUARK_STR_PROPERTIES as $property) {
-            $data = self::addTextProperty($data, $property);
+            $ret[$property] = self::formatTextProperty($data, $property);
         }
         foreach (self::QUARK_BOOL_PROPERTIES as $property) {
-            $data = self::addBoolProperty($data, $property);
+            $ret[$property] = self::formatBoolProperty($data, $property);
         }
 
         $now = date(self::NEO4J_DATETIME_FORMAT, time());
-        $data['created'] = $now;
-        $data['modified'] = $now;
+        $ret['created'] = $now;
+        $ret['modified'] = $now;
 
         // extra properties for future use
-        $data['en_name'] = '';
-        $data['en_description'] = '';
-        $data['gender'] = null;
+        $ret['en_name'] = '';
+        $ret['en_description'] = '';
+        $ret['gender'] = null;
 
-        return $data;
+        return $ret;
     }
     public function generateCypherSnippet($data, $user_id, $bool_props, $int_props, $str_props)
     {
@@ -659,32 +659,36 @@ __EOD__;
     }
     public static function formatGluonParameters($data, $user_id)
     {
-        if (!array_key_exists('relation', $data) || empty($data['relation'])) return false;
+        if (!array_key_exists('relation', $data) || empty($data['relation'])) {
+            return false;
+        } else {
+            $ret = ['relation' => $data['relation']];
+        }
         if (!array_key_exists('gluon_type_id', $data) || empty($data['gluon_type_id'])) {
             $data['gluon_type_id'] = NULL;
         } else {
             $data['gluon_type_id'] = (int) $data['gluon_type_id'];
         }
 
-        $data['id'] = self::buildGuid();
-        $data['user_id'] = $user_id;
-        $data['last_modified_user'] = $user_id;
+        $ret['id'] = self::buildGuid();
+        $ret['user_id'] = $user_id;
+        $ret['last_modified_user'] = $user_id;
 
-        $data = self::addDateTimeProperty($data, 'start');
-        $data = self::addDateTimeProperty($data, 'end');
+        $ret['start'] = self::formatDateTimeProperty($data, 'start');
+        $ret['end'] = self::formatDateTimeProperty($data, 'end');
 
         foreach (self::GLUON_STR_PROPERTIES as $property) {
-            $data = self::addTextProperty($data, $property);
+            $ret[$property] = self::formatTextProperty($data, $property);
         }
         foreach (self::GLUON_BOOL_PROPERTIES as $property) {
-            $data = self::addBoolProperty($data, $property);
+            $ret[$property] = self::formatBoolProperty($data, $property);
         }
 
         $now = date(self::NEO4J_DATETIME_FORMAT, time());
-        $data['created'] = $now;
-        $data['modified'] = $now;
+        $ret['created'] = $now;
+        $ret['modified'] = $now;
 
-        return $data;
+        return $ret;
     }
 
     /*******************************************************/
