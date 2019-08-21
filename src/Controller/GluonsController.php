@@ -160,7 +160,7 @@ class GluonsController extends AppController
         $Neo4j = TableRegistry::get('Neo4j');
         $activeQuark = $Neo4j->getNodeUserCanSee($active_id, $this->Auth->user('id'));
         if (!$activeQuark) {
-        } elseif ($this->request->is('post') || array_key_exists('passive', $this->request->data)) {
+        } elseif ($this->request->is('post') && array_key_exists('passive', $this->request->data)) {
             /*
             $Subjects = TableRegistry::get('Subjects');
             $quarkToGlue = $Subjects->findByName($this->request->data['passive'])->first();
