@@ -115,9 +115,9 @@ class GraphController extends AppController
             foreach($ret as $quark_property) {
                 if (count($quark_property['gluons_related']) === 0) continue;
                 foreach($quark_property['gluons_related'] as $property_gluons) {
-                    // Log::write('debug', 'A: '.$property_gluons['relation']['identity']);
-                    // Log::write('debug', $gluon['relation']['identity']);
-                    if ($property_gluons['relation']['identity'] == $gluon['relation']['identity']) {
+                    // Log::write('debug', 'A: '.$property_gluons['relation']['values']['id']);
+                    // Log::write('debug', $gluon['relation']['values']['id']);
+                    if ($property_gluons['relation']['values']['id'] == $gluon['relation']['values']['id']) {
                         $notInArray = false;
                         break;
                     }
@@ -148,7 +148,7 @@ class GraphController extends AppController
     }
     public function _addGluonsByType($gluon_type_id, $sides, $graph)
     {
-        $subject_id = $graph['subject']['identity'];
+        $subject_id = $graph['subject']['values']['id'];
         $candidates = $graph['relations'];
         $ret = [];
         foreach($candidates as $candidate) {
@@ -159,9 +159,9 @@ class GraphController extends AppController
             if ($candidate_gluon_type_id == $gluon_type_id) {
                 if ($sides == 0) {
                     $ret[] = $candidate;
-                } elseif (($sides == 1) && ($subject_id == $candidate['active']['identity'])) {
+                } elseif (($sides == 1) && ($subject_id == $candidate['active']['values']['id'])) {
                     $ret[] = $candidate;
-                } elseif (($sides == 2) && ($subject_id == $candidate['passive']['identity'])) {
+                } elseif (($sides == 2) && ($subject_id == $candidate['passive']['values']['id'])) {
                     $ret[] = $candidate;
                 }
             }

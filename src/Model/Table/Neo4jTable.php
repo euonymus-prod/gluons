@@ -74,10 +74,13 @@ RETURN n
 __EOD__;
 
     const CYPHER_CREATE_GLUON =<<<__EOD__
-MATCH (active),(passive) WHERE ID(active) = [ACTIVE_ID] AND ID(passive) = [PASSIVE_ID]
+MATCH (active {id: "[ACTIVE_ID]"}),(passive {id: "[PASSIVE_ID]"})
 CREATE (active)-[ relation:[TYPE]  ]->(passive)
 SET
+    relation.id = {id},
     relation.gluon_type_id = {gluon_type_id},
+    relation.active_id = {active_id},
+    relation.passive_id = {passive_id},
     relation.relation = {relation},
     relation.prefix = {prefix},
     relation.suffix = {suffix},
@@ -131,8 +134,7 @@ __EOD__;
     /****************************************************************************/
     public function getRelationship($id)
     {
-        if (!is_numeric($id)) return false;
-        $query = 'MATCH ()-[relation]-() WHERE ID(relation) = '.$id . ' RETURN relation';
+        $query = 'MATCH ()-[relation {id: "'.$id.'"}]-() RETURN relation';
 
         // run cypher
         $result = $this->client->run($query);
@@ -142,8 +144,7 @@ __EOD__;
     }
     public function getNode($id)
     {
-        if (!is_numeric($id)) return false;
-        $query = 'MATCH (n) WHERE ID(n) = '.$id.' RETURN n';
+        $query = 'MATCH (n {id: "'.$id.'"}) RETURN n';
 
         // run cypher
         $result = $this->client->run($query);
@@ -152,10 +153,9 @@ __EOD__;
     }
     public function getNodeUserCanSee($id, $user_id)
     {
-        if (!is_numeric($id)) return false;
         $where = self::whereNodePrivacy(\App\Controller\AppController::PRIVACY_ALL, $user_id, 'n');
-        $query = 'MATCH (n) WHERE ID(n) = '.$id
-               .(empty($where) ? '' : ' AND ' .$where)
+        $query = 'MATCH (n {id: "'.$id.'"})'
+               .(empty($where) ? '' : ' WHERE ' .$where)
                .' RETURN n';
 
         // run cypher
@@ -322,7 +322,7 @@ __EOD__;
         Log::write('debug', 'deleting: ' . $node['values']['name']);
 
         // build delete cypher query
-        $query = 'MATCH (n) WHERE ID(n) = '.$id.' DETACH DELETE n';
+        $query = 'MATCH (n {id: "'.$id.'"}) DETACH DELETE n';
 
         // run cypher
         return $this->client->run($query);
@@ -330,7 +330,7 @@ __EOD__;
     public function addGluon($active_id, $passive_id, $data, $user_id)
     {
         // Format Properties
-        $parameters = self::formatGluonParameters($data, $user_id);
+        $parameters = self::formatGluonParameters($active_id, $passive_id, $data, $user_id);
         if (!$parameters) return false;
 
         // build cypher query
@@ -358,7 +358,7 @@ __EOD__;
         Log::write('debug', 'deleting: ' . print_r($relationship, true));
 
         // build delete cypher query
-        $query = 'MATCH ()-[relation]-() WHERE ID(relation) = '.$id.' DELETE relation';
+        $query = 'MATCH ()-[relation {id: "'.$id.'"}]-() DELETE relation';
 
         // run cypher
         return $this->client->run($query);
@@ -370,8 +370,7 @@ __EOD__;
     /*
       Sample Cypher
       -------------------------
-      MATCH (n:CreativeWork)
-      WHERE ID(n) = 124720
+      MATCH (n:CreativeWork {id: "xxxx-xxxx-xxxx-xxxxxx"})
       REMOVE n:CreativeWork
       SET n += {
           name: {name},
@@ -422,7 +421,7 @@ __EOD__;
             $update_label_pre = ' REMOVE n:'.$old_label;
             $update_label_post = ', n:'.$label;
         }
-        $query = 'MATCH (n:'.$old_label.') WHERE ID(n) = '.$id
+        $query = 'MATCH (n:'.$old_label.' {id: "'.$id.'"})'
                .$update_label_pre.' SET n += '.$saving['update_snippet'] .' '.$update_label_post. ' RETURN n';
 
         // run cypher
@@ -461,7 +460,7 @@ __EOD__;
 
 
 
-        $query = 'MATCH (active)-[relation]->(passive) WHERE ID(relation) = '.$id
+        $query = 'MATCH (active)-[relation {id: "'.$id.'"}]->(passive)'
                .' SET relation += '.$saving['update_snippet'].' RETURN relation';
 
         // Log::write('debug', $saving['update_snippet']);
@@ -478,8 +477,7 @@ __EOD__;
         // if ($type) {
         //     Log::write('debug', __LINE__);
         //     //$updated['identity']
-        //     $query2 = 'MATCH (active)-[relation]->(passive)'
-        //             .' WHERE ID(relation) = '.$id
+        //     $query2 = 'MATCH (active)-[relation {id: "'.$id.'"}]->(passive)'
         //             .' CREATE (active)-[relation2:'.$type.']->(passive)'
         //             .' SET relation2 = relation'
         //             .' WITH relation'
@@ -657,7 +655,7 @@ __EOD__;
         $update_snippet = '{ ' . implode(', ',$snippets) . ' }';
         return compact('update_snippet', 'parameters');
     }
-    public static function formatGluonParameters($data, $user_id)
+    public static function formatGluonParameters($active_id, $passive_id, $data, $user_id)
     {
         if (!array_key_exists('relation', $data) || empty($data['relation'])) {
             return false;
@@ -677,6 +675,8 @@ __EOD__;
         }
 
         $ret['id'] = self::buildGuid();
+        $ret['active_id'] = $active_id;
+        $ret['passive_id'] = $passive_id;
         $ret['user_id'] = $user_id;
         $ret['last_modified_user'] = $user_id;
 
