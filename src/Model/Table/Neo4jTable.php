@@ -445,48 +445,32 @@ __EOD__;
         // NOTE: gluon_type_id の変更があるかどうかをチェック（あれば、Typeの更新が必要になる)
         $type = false;
         // $old_type = self::getType($relationship['values']['gluon_type_id']);
-        if (array_key_exists('gluon_type_id', $data) && !empty($data['gluon_type_id'])) {
-            if ((int)$relationship['values']['gluon_type_id'] != (int)$data['gluon_type_id']) {
-                $type = self::getType($data['gluon_type_id']);
-            }
+        if (!array_key_exists('gluon_type_id', $data)) {
+            $data['gluon_type_id'] = null;
         }
-
-// MATCH (n:User {name:"foo"})-[r:REL]->(m:User {name:"bar"})
-// CREATE (n)-[r2:NEWREL]->(m)
-// // copy properties, if necessary
-// SET r2 = r
-// WITH r
-// DELETE r
-
-
+        if (!array_key_exists('gluon_type_id', $relationship['values'])) {
+            $relationship['values']['gluon_type_id'] = null;
+        }
+        if ((int)$relationship['values']['gluon_type_id'] != (int)$data['gluon_type_id']) {
+            $type = self::getType($data['gluon_type_id']);
+        }
 
         $query = 'MATCH (active)-[relation {id: "'.$id.'"}]->(passive)'
                .' SET relation += '.$saving['update_snippet'].' RETURN relation';
 
-        // Log::write('debug', $saving['update_snippet']);
-        // Log::write('debug', $saving['parameters']);
-        // Log::write('debug', $query);
-
         // run cypher
-        Log::write('debug', 'updating: ' . print_r($relationship['values'], true));
+        // Log::write('debug', 'updating: ' . print_r($saving['parameters'], true));
         $result = $this->client->run($query, $saving['parameters']);
         if (count($result->records()) === 0) return false;
         $updated = self::buildRelationshipArr($result->getRecord()->value('relation'));
 
-        // Log::write('debug', __LINE__);
-        // if ($type) {
-        //     Log::write('debug', __LINE__);
-        //     //$updated['identity']
-        //     $query2 = 'MATCH (active)-[relation {id: "'.$id.'"}]->(passive)'
-        //             .' CREATE (active)-[relation2:'.$type.']->(passive)'
-        //             .' SET relation2 = relation'
-        //             .' WITH relation'
-        //             .' DELETE relation';
-        //     $result2 = $this->client->run($query2);
-        //     if (count($result2->records()) === 0) return false;
-        //     $updated = self::buildRelationshipArr($result2->getRecord()->value('relation'));
-        // }
-        // Log::write('debug', __LINE__);
+        // NOTE: REMOVE & SET でうまくRelationshipt Type更新ができなかったので、削除して作成することにした。
+        if ($type) {
+            $this->deleteRelationship($updated['values']['id']);
+            return $this->addGluon($updated['values']['active_id'],
+                                   $updated['values']['passive_id'],
+                                   $updated['values'], $user_id);
+        }
 
         return $updated;
     }
