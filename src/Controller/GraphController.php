@@ -139,15 +139,7 @@ class GraphController extends AppController
     {
         $QpropertyGtypes = TableRegistry::get('QpropertyGtypes');
         $qproperty_gtypes = $QpropertyGtypes->findByQuarkPropertyId($quark_property_id);
-        $ret = [];
-        foreach ($qproperty_gtypes as $qproperty_gtype) {
-            $tmp = $this->_addGluonsByType($qproperty_gtype['gluon_type_id'], $qproperty_gtype['sides'], $graph);
-            $ret = array_merge($ret, $tmp);
-        }
-        return $ret;
-    }
-    public function _addGluonsByType($gluon_type_id, $sides, $graph)
-    {
+
         $subject_id = $graph['subject']['values']['id'];
         $candidates = $graph['relations'];
         $ret = [];
@@ -156,13 +148,19 @@ class GraphController extends AppController
                 continue;
             }
             $candidate_gluon_type_id = $candidate['relation']['values']['gluon_type_id'];
-            if ($candidate_gluon_type_id == $gluon_type_id) {
-                if ($sides == 0) {
-                    $ret[] = $candidate;
-                } elseif (($sides == 1) && ($subject_id == $candidate['active']['values']['id'])) {
-                    $ret[] = $candidate;
-                } elseif (($sides == 2) && ($subject_id == $candidate['passive']['values']['id'])) {
-                    $ret[] = $candidate;
+
+            foreach ($qproperty_gtypes as $qproperty_gtype) {
+                $gluon_type_id = $qproperty_gtype['gluon_type_id'];
+                $sides = $qproperty_gtype['sides'];
+
+                if ($candidate_gluon_type_id == $gluon_type_id) {
+                    if ($sides == 0) {
+                        $ret[] = $candidate;
+                    } elseif (($sides == 1) && ($subject_id == $candidate['active']['values']['id'])) {
+                        $ret[] = $candidate;
+                    } elseif (($sides == 2) && ($subject_id == $candidate['passive']['values']['id'])) {
+                        $ret[] = $candidate;
+                    }
                 }
             }
         }
