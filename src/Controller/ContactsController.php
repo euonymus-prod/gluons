@@ -15,11 +15,14 @@ class ContactsController extends AppController
 
     public function index()
     {
-        $res = ['status' => 0];
+        $res = ['status' => 0, 'message' => 'Not accepted'];
+
+        // $contact = new ContactForm();
         $Mails = TableRegistry::get('Mails');
         $user = $Mails->newEntity();
         $res = [];
         if ($this->request->is('post')) {
+            // if ($contact->execute($this->request->data)) {
             $mail = $Mails->patchEntity($user, $this->request->data);
             if ($saved = $Mails->save($user)) {
                 $res['status'] = 1;
